@@ -28,7 +28,7 @@ const OrderDetails = () => {
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, [orderId]);
+  }, [orderId, router]);
 
   if (loading) {
     return (

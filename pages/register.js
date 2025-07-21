@@ -31,7 +31,7 @@ export default function RegisterPage() {
           <Login />
           <div className="auth-switch">
             <p>
-              Don't have an account?{' '}
+              Don&apos;t have an account?{' '}
               <button className="link-btn" onClick={() => setShowLogin(false)}>
                 Sign Up
               </button>

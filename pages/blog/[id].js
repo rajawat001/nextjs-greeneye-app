@@ -23,7 +23,7 @@ const BlogDetails = () => {
         setLoading(false);
         router.push("/blog");
       });
-  }, [id]);
+  }, [id, router]);
 
   if (loading) return <div style={{ padding: 40 }}>Loading blog...</div>;
   if (!blog) return <div style={{ padding: 40 }}>Blog not found</div>;

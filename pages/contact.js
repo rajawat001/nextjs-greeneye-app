@@ -33,9 +33,7 @@ export default function ContactPage() {
       <section className="page-header">
         <div className="container">
           <h1>Contact Us</h1>
-          <p>
-            We're here to answer your questions and welcome your feedback.
-          </p>
+          <p>We&apos;re here to answer your questions and welcome your feedback.</p>
         </div>
       </section>
 
