@@ -9,9 +9,9 @@ function AdminDashboard() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+        const token = localStorage.getItem("authToken");
         const { data } = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/stats`, {
-          headers: { Authorization: `Bearer ${userInfo.token}` }
+          headers: { Authorization: `Bearer ${token}` }
         });
         setStats(data);
       } catch (err) {

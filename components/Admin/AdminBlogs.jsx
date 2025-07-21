@@ -19,7 +19,7 @@ export default function AdminBlogs() {
   const fetchBlogs = async () => {
     setLoading(true);
     const res = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/blogs`);
-    setBlogs(res.data);
+    setBlogs(res.data.blogs);
     setLoading(false);
   };
 

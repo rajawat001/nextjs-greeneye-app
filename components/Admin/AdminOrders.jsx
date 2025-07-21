@@ -22,9 +22,9 @@ function AdminOrders() {
     const fetchOrders = async () => {
       setLoading(true);
       try {
-        const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+        const token = localStorage.getItem("authToken");
         const { data } = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/orders`, {
-          headers: { Authorization: `Bearer ${userInfo.token}` }
+          headers: { Authorization: `Bearer ${token}` }
         });
         setOrders(data.orders);
       } catch (e) {
@@ -52,12 +52,12 @@ function AdminOrders() {
     setSaving(true);
     setSaveMsg("");
     try {
-      const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+      const token = localStorage.getItem("authToken");
       const { data } = await axios.put(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/orders/${selectedOrder._id}`,
         { orderStatus: status, isDelivered },
         {
-          headers: { Authorization: `Bearer ${userInfo.token}` }
+          headers: { Authorization: `Bearer ${token}` }
         }
       );
       setSaveMsg("Order status updated!");

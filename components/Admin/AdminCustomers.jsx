@@ -24,10 +24,10 @@ export default function AdminCustomers() {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+      const token = localStorage.getItem("authToken");
       const { data } = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/users`,
-        { headers: { Authorization: `Bearer ${userInfo.token}` } }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
       setUsers(data.users);
     } catch (e) {
@@ -69,11 +69,11 @@ export default function AdminCustomers() {
     setSaving(true);
     setSaveMsg("");
     try {
-      const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+      const token = localStorage.getItem("authToken");
       const { data } = await axios.put(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/users/${selected._id}`,
         edit,
-        { headers: { Authorization: `Bearer ${userInfo.token}` } }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
       setSaveMsg("Saved!");
       setUsers(users =>
@@ -89,11 +89,11 @@ export default function AdminCustomers() {
   const handleDelete = async () => {
     if (!window.confirm("Delete this user?")) return;
     setSaving(true);
-    const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+    const token = localStorage.getItem("authToken");
     try {
       await axios.delete(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/users/${selected._id}`,
-        { headers: { Authorization: `Bearer ${userInfo.token}` } }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
       setUsers(users => users.filter(u => u._id !== selected._id));
       closeDetail();

@@ -76,12 +76,12 @@ export default function AdminProduct() {
     setSaving(true);
     setSaveMsg("");
     try {
-      const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+      const token = localStorage.getItem("authToken");
       if (isNew) {
         const { data } = await axios.post(
           `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/plants`,
           edit,
-          { headers: { Authorization: `Bearer ${userInfo.token}` } }
+          { headers: { Authorization: `Bearer ${token}` } }
         );
         setPlants((arr) => [data, ...arr]);
         setSaveMsg("Product created!");
@@ -90,7 +90,7 @@ export default function AdminProduct() {
         const { data } = await axios.put(
           `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/plants/${selected._id}`,
           edit,
-          { headers: { Authorization: `Bearer ${userInfo.token}` } }
+          { headers: { Authorization: `Bearer ${token}` } }
         );
         setPlants((arr) =>
           arr.map((p) => (p._id === data._id ? { ...p, ...data } : p))
@@ -109,10 +109,10 @@ export default function AdminProduct() {
     if (!window.confirm("Delete this product?")) return;
     setSaving(true);
     try {
-      const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+      const token = localStorage.getItem("authToken");
       await axios.delete(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/plants/${selected._id}`,
-        { headers: { Authorization: `Bearer ${userInfo.token}` } }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
       setPlants((arr) => arr.filter((p) => p._id !== selected._id));
       closeModal();
