@@ -39,9 +39,6 @@ export default function Document() {
           name="description"
           content="Web site created using Next.js"
         />
-        <link rel="apple-touch-icon" href="/logo192.png" />
-        <link rel="manifest" href="/manifest.json" />
-        <title>GreenEye</title>
       </Head>
       <body>
         <Main />
