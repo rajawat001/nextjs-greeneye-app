@@ -13,7 +13,7 @@ function AdminDashboard() {
         const { data } = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/stats`, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        setStats(data);
+        setStats(data.data);
       } catch (err) {
         setError("Failed to load stats. Are you logged in as admin?");
       } finally {
@@ -27,19 +27,18 @@ function AdminDashboard() {
   if (error) return <div style={{ color: "red" }}>{error}</div>;
   if (!stats) return <div>No data available.</div>;
 
-  // Defensive fallback for missing data
-  const day = stats.byDay?.[0] || { count: 0, amount: 0 };
-  const month = stats.byMonth?.[0] || { count: 0, amount: 0 };
-  const year = stats.byYear?.[0] || { count: 0, amount: 0 };
+  const today = stats.today || { orders: 0, totalAmount: 0 };
+  const last30Days = stats.last30Days || { orders: 0, totalAmount: 0 };
+  const last1Year = stats.last1Year || { orders: 0, totalAmount: 0 };
 
   return (
     <div>
       <h1>Admin Dashboard</h1>
       <div style={{ display: "flex", gap: 32, marginBottom: 32, flexWrap: "wrap" }}>
-        <StatCard title="Today's Orders" value={day.count} amount={day.amount} />
-        <StatCard title="Monthly Orders" value={month.count} amount={month.amount} />
-        <StatCard title="Yearly Orders" value={year.count} amount={year.amount} />
-        <StatCard title="Total Orders" value={stats.orderCount} />
+        <StatCard title="Today's Orders" value={today.orders} amount={today.totalAmount} />
+        <StatCard title="Monthly Orders" value={last30Days.orders} amount={last30Days.totalAmount} />
+        <StatCard title="Yearly Orders" value={last1Year.orders} amount={last1Year.totalAmount} />
+        <StatCard title="Total Orders" value={stats.totalOrders} />
         <StatCard title="Total Users" value={stats.userCount} />
         <StatCard title="Total Plants" value={stats.plantCount} />
       </div>
