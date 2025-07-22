@@ -8,12 +8,12 @@ const Checkout = () => {
     name: "",
     email: "",
     phone: "",
-    address: "",
+    street: "",
     city: "",
     state: "",
     pincode: "",
   });
-  const [paymentMethod, setPaymentMethod] = useState("cod");
+  const [paymentMethod, setPaymentMethod] = useState("COD");
   const [placing, setPlacing] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -39,7 +39,36 @@ const Checkout = () => {
         setError(err.response?.data?.message || "Could not fetch cart. Please try again.");
       }
     };
+
+    const fetchUserInfo = async () => {
+      try {
+        const token = localStorage.getItem("authToken");
+        if (!token) return;
+
+        const res = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/users/profile`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const { name, email, phone, address } = res.data;
+        setUserInfo((prev) => ({
+          ...prev,
+          name,
+          email,
+          phone: phone || "",
+          street: address?.street || "",
+          city: address?.city || "",
+          state: address?.state || "",
+          pincode: address?.pincode || "",
+        }));
+      } catch (error) {
+        console.error("Failed to fetch user info:", error);
+      }
+    };
+    
     fetchCart();
+    fetchUserInfo();
   }, []);
 
   const total =
@@ -50,8 +79,8 @@ const Checkout = () => {
   };
 
   const validate = () => {
-    const { name, email, phone, address, city, state, pincode } = userInfo;
-    if (!name || !email || !phone || !address || !city || !state || !pincode)
+    const { name, email, phone, street, city, state, pincode } = userInfo;
+    if (!name || !email || !phone || !street || !city || !state || !pincode)
       return "Please fill all fields";
     if (!/^\d{10}$/.test(phone)) return "Enter a valid 10-digit phone number";
     if (!/\S+@\S+\.\S+/.test(email)) return "Enter a valid email";
@@ -87,7 +116,7 @@ const Checkout = () => {
 
       const shippingAddress = {
         name: userInfo.name,
-        address: userInfo.address,
+        street: userInfo.street,
         city: userInfo.city,
         state: userInfo.state,
         pincode: userInfo.pincode,
@@ -100,23 +129,63 @@ const Checkout = () => {
         paymentMethod,
       };
 
-      await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/orders`, orderData, {
+      const res = await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/orders`, orderData, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
-      setSuccess("Order placed successfully! Thank you 🌱");
-      setCart(null);
-      setTimeout(() => {
+      const createdOrder = res.data;
+
+      // 🚀 Razorpay Checkout if Razorpay selected
+      if (paymentMethod === "Razorpay") {
+        const razorpayOptions = {
+          key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+          amount: createdOrder.totalPrice * 100,
+          currency: "INR",
+          name: "GreenEye Store",
+          description: "Plant Purchase",
+          order_id: createdOrder.paymentResult.id,
+          handler: async function (response) {
+            const verifyRes = await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/payment/verify`, {
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              orderId: createdOrder._id,
+            }, {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+
+            if (verifyRes.data.success) {
+              setSuccess("Payment successful! 🌱");
+              setCart(null);
+              router.push("/myorders");
+            } else {
+              setError("Payment verification failed.");
+            }
+          },
+          prefill: {
+            name: userInfo.name,
+            email: userInfo.email,
+            contact: userInfo.phone,
+          },
+          theme: { color: "#388e3c" },
+        };
+
+        const rzp = new Razorpay(razorpayOptions);
+        rzp.open();
+      } else {
+        setSuccess("Order placed successfully with COD!");
+        setCart(null);
         router.push("/myorders");
-      }, 0);
+      }
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to place order. Try again later.");
+      setError(err.response?.data?.message || "Failed to place order.");
     } finally {
       setPlacing(false);
     }
   };
+
 
   return (
     <div style={{ maxWidth: 600, margin: "50px auto", padding: 24, background: "#fff", borderRadius: 12, boxShadow: "0 2px 16px #e0e0e0" }}>
@@ -126,7 +195,7 @@ const Checkout = () => {
           { label: "Name", name: "name" },
           { label: "Email", name: "email", type: "email" },
           { label: "Phone", name: "phone", type: "tel", pattern: "\\d{10}", maxLength: 10 },
-          { label: "Shipping Address", name: "address", isTextarea: true },
+          { label: "Shipping Address", name: "street", isTextarea: true },
           { label: "City", name: "city" },
           { label: "State", name: "state" },
           { label: "Pincode", name: "pincode", pattern: "\\d{6}", maxLength: 6 },

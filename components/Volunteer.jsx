@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useRouter } from "next/router";
-import { showNotification } from "@/components/Notification"; // update the path as needed
+import { showNotification } from "@/components/Notification";
 
 const cities = [
   "Jaipur", "Mumbai", "Delhi", "Bangalore", "Pune", "Hyderabad", "Chennai", "Kolkata", "Other"

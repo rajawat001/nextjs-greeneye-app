@@ -46,7 +46,12 @@ export default function MyOrders() {
 
   return (
     <div className="container" style={{ maxWidth: 600, marginTop: 40 }}>
-      <h2 style={{ marginTop: 50, marginBottom: 20 }}>
+      <Link href="/profile" passHref legacyBehavior>
+        <a style={{ color: "#388e3c", textDecoration: "none",marginTop:10, marginBottom: 18, display: "inline-block" }}>
+          <i className="fas fa-arrow-left"></i> Back to My Profile
+        </a>
+      </Link>
+      <h2 style={{ marginTop: 5, marginBottom: 20 }}>
         <i className="fas fa-box"></i> My Orders
       </h2>
       {orders.map((order) => (

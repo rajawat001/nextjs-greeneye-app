@@ -1,11 +1,9 @@
 // src/components/Donate.jsx
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { showNotification } from "@/components/Notification";
+import { useRouter } from "next/router";
 
-import React, { useState } from "react";
-import { showNotification } from "./Notification";
-
-/**
- * Donate section with sample breakdown and donation form.
- */
 const presetAmounts = [100, 500, 1000, 5000];
 
 const Donate = () => {
@@ -17,40 +15,108 @@ const Donate = () => {
     donorPhone: "",
   });
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
-  // Handle preset button click
+  // 🟢 Auto-fill profile info if logged in
+  useEffect(() => {
+    const fetchProfile = async () => {
+      const token = typeof window !== "undefined" ? localStorage.getItem("authToken") : null;
+      if (!token) return;
+
+      try {
+        const { data } = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/users/profile`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        setForm((f) => ({
+          ...f,
+          donorName: data.name || "",
+          donorEmail: data.email || "",
+          donorPhone: data.phone || "",
+        }));
+      } catch (error) {
+        console.error("Failed to fetch user profile", error);
+      }
+    };
+
+    fetchProfile();
+  }, []);
+
   const handleAmountBtn = (amt, idx) => {
     setAmount(amt.toString());
     setActiveBtn(idx);
   };
 
-  // Handle custom amount input
   const handleAmountChange = (e) => {
     setAmount(e.target.value);
     setActiveBtn(null);
   };
 
-  // Handle donor info change
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((f) => ({ ...f, [name]: value }));
   };
 
-  // Handle form submit
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (!amount || parseInt(amount, 10) < 50) {
       showNotification("Please enter a minimum donation amount of ₹50.", "error");
       return;
     }
+
     setLoading(true);
-    setTimeout(() => {
-      showNotification(`Thank you for your generous donation of ₹${amount}!`, "success");
-      setAmount("");
-      setForm({ donorName: "", donorEmail: "", donorPhone: "" });
-      setActiveBtn(null);
+
+    try {
+      const { data } = await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/donations/create`, {
+        donorName: form.donorName,
+        donorEmail: form.donorEmail,
+        donorPhone: form.donorPhone,
+        amount: parseInt(amount, 10),
+      });
+
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        amount: data.amount,
+        currency: data.currency,
+        name: "GreenEye Donation",
+        description: "Thank you for your support!",
+        order_id: data.orderId,
+        handler: async function (response) {
+          const verifyRes = await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/donations/verify`, {
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_signature: response.razorpay_signature,
+            donationId: data.donationId,
+          });
+
+          if (verifyRes.data.success) {
+            showNotification(`Thank you for donating ₹${amount}! 🌿`, "success");
+            setAmount("");
+            setForm({ donorName: "", donorEmail: "", donorPhone: "" });
+            setActiveBtn(null);
+            router.push("/mydonation");
+          } else {
+            showNotification("Payment verification failed. Please try again.", "error");
+          }
+        },
+        prefill: {
+          name: form.donorName,
+          email: form.donorEmail,
+          contact: form.donorPhone,
+        },
+        theme: { color: "#4CAF50" },
+      };
+
+      const razor = new window.Razorpay(options);
+      razor.open();
+    } catch (err) {
+      console.error(err);
+      showNotification("Donation failed. Please try again later.", "error");
+    } finally {
       setLoading(false);
-    }, 3000);
+    }
   };
 
   return (

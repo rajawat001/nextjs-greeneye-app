@@ -14,6 +14,7 @@ const AdminLayout = ({ children }) => {
         <Link href="/admin/customers" className={pathname.startsWith("/admin/customers") ? "active" : ""}>Customers</Link>
         <Link href="/admin/products" className={pathname.startsWith("/admin/products") ? "active" : ""}>Products</Link>
         <Link href="/admin/blogs" className={pathname.startsWith("/admin/blogs") ? "active" : ""}>Blogs</Link>
+        <Link href="/admin/donation" className={pathname.startsWith("/admin/donation") ? "active" : ""}>Donations</Link>
       </aside>
 
       <main className="admin-content">
