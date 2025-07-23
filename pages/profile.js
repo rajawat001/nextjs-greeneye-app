@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import axios from "axios";
+import ProfileTabs from '@/components/ProfileTabs';
 
 const cities = ["Jaipur", "Mumbai", "Delhi", "Bangalore", "Pune", "Hyderabad", "Chennai", "Kolkata", "Other"];
 const availabilities = [
@@ -136,47 +137,7 @@ const Profile = () => {
     <section className="profile-page">
       <div className="container" style={{ maxWidth: 600, marginTop: 2 }}>
         {/* Tabs */}
-        <div style={{ display: "flex", borderBottom: "1px solid #eee",marginTop:5, marginBottom: 10 }}>
-          <Link
-            href="/profile"
-            className={`profile-tab${pathname === "/profile" ? " active" : ""}`}
-            style={{
-              padding: "12px 28px 10px 0",
-              fontWeight: 600,
-              textDecoration: "none",
-              color: pathname === "/profile" ? "#388e3c" : "#222",
-              borderBottom: pathname === "/profile" ? "3px solid #388e3c" : "3px solid transparent"
-            }}
-          >
-            Profile
-          </Link>
-          <Link
-            href="/myorders"
-            className={`profile-tab${pathname.startsWith("/myorders") ? " active" : ""}`}
-            style={{
-              padding: "12px 0 10px 28px",
-              fontWeight: 600,
-              textDecoration: "none",
-              color: pathname.startsWith("/myorders") ? "#388e3c" : "#222",
-              borderBottom: pathname.startsWith("/myorders") ? "3px solid #388e3c" : "3px solid transparent"
-            }}
-          >
-            My Orders
-          </Link>
-          <Link
-            href="/mydonation"
-            className={`profile-tab${pathname.startsWith("/mydonation") ? " active" : ""}`}
-            style={{
-              padding: "12px 0 10px 28px",
-              fontWeight: 600,
-              textDecoration: "none",
-              color: pathname.startsWith("/mydonation") ? "#388e3c" : "#222",
-              borderBottom: pathname.startsWith("/myorders") ? "3px solid #388e3c" : "3px solid transparent"
-            }}
-          >
-            My Donation
-          </Link>
-        </div>
+        <ProfileTabs />
         <div className="auth-card" style={{ minHeight: 350 }}>
           <div className="auth-header">
             <h2><i className="fas fa-user-circle"></i> Profile</h2>

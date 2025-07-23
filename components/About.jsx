@@ -40,7 +40,7 @@ const About = () => (
         </div>
         <div className="about-image">
           <img
-            src="https://scontent.fjai6-1.fna.fbcdn.net/v/t39.30808-6/466140338_10233836470838714_8014111389483907172_n.jpg?_nc_cat=105&ccb=1-7&_nc_sid=86c6b0&_nc_ohc=CUIOh2pT028Q7kNvwF0cLSM&_nc_oc=AdmjcCUpAv2N9DNzoMMduIsqY3yZtIG6tgk2HPgwFHiExtfI0Azh8Wjw2YeYKOYt5uZVO6w2SDKJZXR8q5SEUQLQ&_nc_zt=23&_nc_ht=scontent.fjai6-1.fna&_nc_gid=FyHhpJvqLKi6bapeXXW6Tw&oh=00_AfQrtz2dsW-e9Co0nMqzKjfFdWErdbANKpJeWFCYJfJpzA&oe=687EB2A6"
+            src="/assets/Environmental COnservation.png"
             alt="Environmental Conservation"
             className="about-img"
           />

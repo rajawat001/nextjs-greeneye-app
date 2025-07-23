@@ -81,7 +81,7 @@ const Impact = () => {
         <div className="impact-visual">
           <div className="impact-image">
             <img
-              src="https://scontent.fjai6-1.fna.fbcdn.net/v/t39.30808-6/466110533_10233825934455311_5593716940719427101_n.jpg?_nc_cat=107&ccb=1-7&_nc_sid=86c6b0&_nc_ohc=8u2-hVLStrMQ7kNvwFjr1tk&_nc_oc=Adn1KEI5BDkdm_AxX9wyJpaZ6GLKqFJTMKIqfZMooZvFkzLPTcTNAAuAs5V64fgTT90g-dhhoLy0EaaP1STA4kEx&_nc_zt=23&_nc_ht=scontent.fjai6-1.fna&_nc_gid=FyHhpJvqLKi6bapeXXW6Tw&oh=00_AfTjsQHSXfqGY4Qu0BQfWapY5ZOGzggvvs_SuArb1W9_iw&oe=687EA750"
+              src="/assets/GreenLandscape.png"
               alt="Green Landscape"
             />
           </div>

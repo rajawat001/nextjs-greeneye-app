@@ -1,8 +1,9 @@
 'use client'
-import { useEffect, useState } from 'react'
-import axios from 'axios'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
+import { useEffect, useState } from 'react';
+import axios from 'axios';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import ProfileTabs from '@/components/ProfileTabs';
 
 export default function MyDonations() {
     const [donations, setDonations] = useState([])
@@ -49,12 +50,8 @@ export default function MyDonations() {
     }
 
     return (
-        <div className="container" style={{ maxWidth: 600, marginTop: 40 }}>
-            <Link href="/profile" passHref legacyBehavior>
-                <a style={{ color: "#388e3c", textDecoration: "none", marginTop: 10, marginBottom: 18, display: "inline-block" }}>
-                    <i className="fas fa-arrow-left"></i> Back to My Profile
-                </a>
-            </Link>
+        <div className="container" style={{ maxWidth: 600, marginTop: 70 }}>
+            <ProfileTabs />
             <h2 style={{ marginTop: 5, marginBottom: 20 }}>
                 <i className="fas fa-hand-holding-heart"></i> My Donations
             </h2>
