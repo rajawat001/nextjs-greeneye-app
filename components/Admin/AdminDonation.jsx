@@ -8,6 +8,7 @@ const AdminDonation = () => {
 
   // Filters
   const [donor, setDonor] = useState("");
+  const [phone, setPhone] = useState("");
   const [minAmount, setMinAmount] = useState("");
   const [sortBy, setSortBy] = useState("createdAt");
 
@@ -21,6 +22,7 @@ const AdminDonation = () => {
       // Create query params string
       const params = new URLSearchParams();
       if (donor) params.append("donor", donor);
+      if (phone) params.append("phone", phone);
       if (minAmount) params.append("minAmount", minAmount);
       if (sortBy) params.append("sortBy", sortBy);
 
@@ -62,6 +64,13 @@ const AdminDonation = () => {
           style={{ marginRight: 10 }}
         />
         <input
+          type="text"
+          placeholder="Phone"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          style={{ marginRight: 10 }}
+        />
+        <input
           type="number"
           placeholder="Min Amount"
           value={minAmount}
@@ -76,6 +85,7 @@ const AdminDonation = () => {
           <option value="createdAt">Newest</option>
           <option value="amount">Amount</option>
           <option value="donorName">Donor Name</option>
+          <option value="donorPhone">Donor Phone</option>
         </select>
         <button type="submit">Apply Filters</button>
       </form>
