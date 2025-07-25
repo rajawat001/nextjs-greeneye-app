@@ -12,6 +12,8 @@ const PlantShop = () => {
   const [priceRange, setPriceRange] = useState([0, 10000]);
   const [cart, setCart] = useState({ items: [] });
   const [showCart, setShowCart] = useState(false);
+  const [userCountry, setUserCountry] = useState(null);
+  const [countryFiltered, setCountryFiltered] = useState([]);
   const router = useRouter();
 
   useEffect(() => {
@@ -48,15 +50,41 @@ const PlantShop = () => {
     fetchCart();
   }, []);
 
+  // Fetch user's country
+  useEffect(() => {
+    fetch("/api/geo")
+      .then((res) => res.json())
+      .then((geo) => setUserCountry(geo.countryCode))
+      .catch(() => setUserCountry(null));
+  }, []);
+
+  // Filter plants by country when plants or userCountry changes
+  useEffect(() => {
+    if (!userCountry) return setCountryFiltered([]);
+    const byCountry = plants.filter((plant) => {
+      // plant.country can be an array or string
+      if (Array.isArray(plant.country)) {
+        return plant.country.includes(userCountry);
+      }
+      if (typeof plant.country === "string") {
+        return plant.country === userCountry;
+      }
+      return false;
+    });
+    setCountryFiltered(byCountry);
+  }, [plants, userCountry]);
+
+  // Further filter plants by search and price within the country
   useEffect(() => {
     setFilteredPlants(
-      plants.filter((plant) => {
+      countryFiltered.filter((plant) => {
         const matchesName = plant.name.toLowerCase().includes(search.toLowerCase());
         const matchesPrice = plant.price >= priceRange[0] && plant.price <= priceRange[1];
         return matchesName && matchesPrice;
       })
     );
-  }, [search, priceRange, plants]);
+  }, [search, priceRange, countryFiltered]);
+
 
   const addToCart = async (plant) => {
     const token = getToken();
@@ -121,6 +149,13 @@ const PlantShop = () => {
   return (
     <div className="container" style={{ padding: "40px 10px", maxWidth: 1200 }}>
       <h1 style={{ textAlign: "center" }}>🪴 Plant Store</h1>
+
+      {/* Show country info */}
+      <div style={{ textAlign: "center", margin: "10px 0", color: "#388e3c" }}>
+        {userCountry
+          ? `Showing plants available in your country (${userCountry})`
+          : "Detecting your location..."}
+      </div>
 
       {/* Search and Filters */}
       <div
@@ -211,6 +246,26 @@ const PlantShop = () => {
           marginTop: 10,
         }}
       >
+
+        {/* If geo failed or still loading */}
+        {!userCountry && (
+          <p style={{ fontStyle: "italic", opacity: 0.6 }}>
+            Loading location...
+          </p>
+        )}
+        {/* If no plants for country */}
+        {userCountry && countryFiltered.length === 0 && (
+          <p style={{ fontStyle: "italic", opacity: 0.6 }}>
+            No service available in your area.
+          </p>
+        )}
+        {/* If plants exist but filtered out by search/price */}
+        {userCountry && countryFiltered.length > 0 && filteredPlants.length === 0 && (
+          <p style={{ fontStyle: "italic", opacity: 0.6 }}>
+            No plants found for this search/price.
+          </p>
+        )}
+
         {filteredPlants.length === 0 && (
           <p style={{ fontStyle: "italic", opacity: 0.6 }}>
             No plants found for this search/price.

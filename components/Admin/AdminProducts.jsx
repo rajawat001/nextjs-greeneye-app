@@ -37,6 +37,7 @@ export default function AdminProduct() {
       category: plant.category || "",
       countInStock: plant.countInStock || 0,
       isFeatured: !!plant.isFeatured,
+      country: Array.isArray(plant.country) ? plant.country.join(", ") : (plant.country || "")
     });
     setSaveMsg("");
   };
@@ -52,6 +53,7 @@ export default function AdminProduct() {
       category: "",
       countInStock: "",
       isFeatured: false,
+      country: ""
     });
     setSaveMsg("");
   };
@@ -77,10 +79,17 @@ export default function AdminProduct() {
     setSaveMsg("");
     try {
       const token = localStorage.getItem("authToken");
+      const payload = {
+        ...edit,
+        country: edit.country
+          .split(",")
+          .map((c) => c.trim().toUpperCase())
+          .filter(Boolean)
+      };
       if (isNew) {
         const { data } = await axios.post(
           `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/plants`,
-          edit,
+          payload,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setPlants((arr) => [data, ...arr]);
@@ -89,7 +98,7 @@ export default function AdminProduct() {
       } else {
         const { data } = await axios.put(
           `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/plants/${selected._id}`,
-          edit,
+          payload,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setPlants((arr) =>
@@ -143,6 +152,7 @@ export default function AdminProduct() {
               <th>Stock</th>
               <th>Category</th>
               <th>Featured</th>
+              <th>Countries</th>
             </tr>
           </thead>
           <tbody>
@@ -161,6 +171,11 @@ export default function AdminProduct() {
                     ? <span style={{color:"#388e3c",fontWeight:600}}>Yes</span>
                     : <span style={{color:"#b62222",fontWeight:600}}>No</span>
                   }
+                </td>
+                <td>
+                  {Array.isArray(plant.country)
+                    ? plant.country.join(', ')
+                    : plant.country || ''}
                 </td>
               </tr>
             ))}
@@ -237,6 +252,10 @@ export default function AdminProduct() {
                 <option value="">Select Category</option>
                 <option value="Indoor">Indoor</option>
                 <option value="Outdoor">Outdoor</option>
+                <option value="Flowering">Flowering</option>
+                <option value="Fruit">Fruit</option>
+                <option value="Medicinal">Medicinal</option>
+                <option value="Other">Other</option>
                 <option value="Tree">Tree</option>
               </select>
               <label style={{marginTop:10}}>
@@ -249,6 +268,15 @@ export default function AdminProduct() {
                 />
                 Featured
               </label>
+              <label style={{marginTop:10}}>Countries (comma separated, e.g. IN, US, GB):</label>
+              <input
+                name="country"
+                value={edit.country}
+                onChange={handleChange}
+                className="admin-input"
+                style={{ width: "100%" }}
+                placeholder="IN, US, GB"
+              />
             </div>
             <button className="admin-save-btn" disabled={saving} onClick={handleSave}>
               {saving ? "Saving..." : isNew ? "Add Product" : "Save"}

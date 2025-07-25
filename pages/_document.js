@@ -21,14 +21,14 @@ export default function Document() {
         <meta property="og:site_name" content="GreenEye Foundation" />
         <meta property="og:title" content="GreenEye - For a Greener Future" />
         <meta property="og:description" content="Join GreenEye in making the world greener and cleaner!" />
-        <meta property="og:image" content="/assets/og-image.jpg" />
+        <meta property="og:image" content="/assets/GreenLandscape.png" />
         <meta property="og:url" content="https://greeneye.foundation" />
 
         {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="GreenEye - Eco Foundation" />
         <meta name="twitter:description" content="Support our mission to protect the planet!" />
-        <meta name="twitter:image" content="/assets/og-image.jpg" />
+        <meta name="twitter:image" content="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSS5TiHD4i2ifm-zhqkKikFOFdiipUvByJZiA&s" />
 
         {/* Canonical */}
         <link rel="canonical" href="https://greeneye.foundation" />
