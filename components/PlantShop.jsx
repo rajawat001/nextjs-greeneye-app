@@ -374,7 +374,7 @@ const PlantShop = () => {
             onClick={() => setShowCart(false)}
             style={{
               position: "absolute",
-              top: 12,
+              top: 50,
               right: 12,
               background: "none",
               border: "none",
@@ -386,7 +386,7 @@ const PlantShop = () => {
           >
             ×
           </button>
-          <h3 style={{ marginBottom: 18 }}>
+          <h3 style={{marginTop:20, marginBottom: 18 }}>
             <i className="fas fa-shopping-cart"></i> {t("yourCart")}
           </h3>
           {!cart.items || cart.items.length === 0 ? (
