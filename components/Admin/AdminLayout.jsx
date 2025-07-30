@@ -9,6 +9,11 @@ const AdminLayout = ({ children }) => {
   return (
     <div className="admin-panel">
       <aside className="admin-sidebar">
+        <Link href="/profile" passHref legacyBehavior>
+          <a style={{ color: "#388e3c", textDecoration: "none", marginTop: 0, marginBottom: 10, display: "inline-block" }}>
+            <i className="fas fa-arrow-left"></i> MyProfile
+          </a>
+        </Link>
         <Link href="/admin" className={pathname === "/admin" ? "active" : ""}>Dashboard</Link>
         <Link href="/admin/orders" className={pathname.startsWith("/admin/orders") ? "active" : ""}>Orders</Link>
         <Link href="/admin/customers" className={pathname.startsWith("/admin/customers") ? "active" : ""}>Customers</Link>

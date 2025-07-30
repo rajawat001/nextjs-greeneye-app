@@ -1,27 +1,23 @@
-import React, { useEffect, useState } from "react";
+//'use client';
+import React, { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 
-/**
- * Notification system for success/error/info
- */
 let showNotificationFn;
-export function showNotification(message, type = "info") {
+export function showNotification(message, type = 'info') {
   if (showNotificationFn) showNotificationFn({ message, type });
 }
 
 const icons = {
-  success: "fa-check-circle",
-  error: "fa-exclamation-triangle",
-  warning: "fa-exclamation-circle",
-  info: "fa-info-circle",
+  success: 'fa-check-circle',
+  error: 'fa-exclamation-triangle',
+  warning: 'fa-exclamation-circle',
+  info: 'fa-info-circle',
 };
 
-/**
- * Top-right toast notification
- */
 const Notification = () => {
+  const t = useTranslations('notification');
   const [notif, setNotif] = useState(null);
 
-  // Allow global calls to showNotification()
   useEffect(() => {
     showNotificationFn = setNotif;
     return () => {
@@ -37,11 +33,16 @@ const Notification = () => {
 
   if (!notif) return null;
 
+  let message = notif.message;
+  if (typeof message === 'string' && message.startsWith('notif:')) {
+    message = t(message.replace('notif:', ''));
+  }
+
   return (
     <div
       className={`notification notification-${notif.type}`}
       style={{
-        position: "fixed",
+        position: 'fixed',
         top: 100,
         right: 20,
         maxWidth: 400,
@@ -50,11 +51,11 @@ const Notification = () => {
     >
       <div className="notification-content">
         <i className={`fas ${icons[notif.type] || icons.info}`}></i>
-        <span>{notif.message}</span>
+        <span>{message}</span>
         <button
           className="notification-close"
           onClick={() => setNotif(null)}
-          aria-label="Close"
+          aria-label={t('close')}
         >
           <i className="fas fa-times"></i>
         </button>

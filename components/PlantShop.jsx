@@ -1,11 +1,20 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/router";
+import { useTranslations } from "next-intl";
 
 const formatPrice = (price) => `₹${price.toLocaleString()}`;
-const getToken = () => typeof window !== "undefined" && localStorage.getItem("authToken");
+
+// Helper to fetch token only on client
+const getToken = () => {
+  if (typeof window !== "undefined") {
+    return localStorage.getItem("authToken");
+  }
+  return null;
+};
 
 const PlantShop = () => {
+  const t = useTranslations("plantshop");
   const [plants, setPlants] = useState([]);
   const [filteredPlants, setFilteredPlants] = useState([]);
   const [search, setSearch] = useState("");
@@ -16,6 +25,7 @@ const PlantShop = () => {
   const [countryFiltered, setCountryFiltered] = useState([]);
   const router = useRouter();
 
+  // Fetch plants
   useEffect(() => {
     axios
       .get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/plants`)
@@ -34,11 +44,12 @@ const PlantShop = () => {
       });
   }, []);
 
+  // Fetch cart (client-side only)
   useEffect(() => {
     const fetchCart = async () => {
+      const token = getToken();
+      if (!token) return setCart({ items: [] });
       try {
-        const token = getToken();
-        if (!token) return setCart({ items: [] });
         const res = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart`, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -50,8 +61,9 @@ const PlantShop = () => {
     fetchCart();
   }, []);
 
-  // Fetch user's country
+  // Fetch user's country (client-side only)
   useEffect(() => {
+    if (typeof window === "undefined") return;
     fetch("/api/geo")
       .then((res) => res.json())
       .then((geo) => setUserCountry(geo.countryCode))
@@ -62,7 +74,6 @@ const PlantShop = () => {
   useEffect(() => {
     if (!userCountry) return setCountryFiltered([]);
     const byCountry = plants.filter((plant) => {
-      // plant.country can be an array or string
       if (Array.isArray(plant.country)) {
         return plant.country.includes(userCountry);
       }
@@ -85,10 +96,10 @@ const PlantShop = () => {
     );
   }, [search, priceRange, countryFiltered]);
 
-
+  // Cart actions (client-side only)
   const addToCart = async (plant) => {
     const token = getToken();
-    if (!token) return alert("Please login first!");
+    if (!token) return alert(t("loginFirst"));
     try {
       await axios.post(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart`,
@@ -99,8 +110,9 @@ const PlantShop = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       setCart(res.data);
+      alert(t("addedToCart"));
     } catch (e) {
-      alert(e.response?.data?.message || "Failed to add to cart. Try again.");
+      alert(e.response?.data?.message || t("addCartFail"));
     }
   };
 
@@ -115,8 +127,9 @@ const PlantShop = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       setCart(res.data);
+      alert(t("removedFromCart"));
     } catch (e) {
-      alert(e.response?.data?.message || "Failed to remove from cart. Try again.");
+      alert(e.response?.data?.message || t("removeCartFail"));
     }
   };
 
@@ -138,7 +151,7 @@ const PlantShop = () => {
       });
       setCart(res.data);
     } catch (e) {
-      alert(e.response?.data?.message || "Failed to update cart. Try again.");
+      alert(e.response?.data?.message || t("updateCartFail"));
     }
   };
 
@@ -148,13 +161,12 @@ const PlantShop = () => {
 
   return (
     <div className="container" style={{ padding: "40px 10px", maxWidth: 1200 }}>
-      <h1 style={{ textAlign: "center" }}>🪴 Plant Store</h1>
+      <h1 style={{ textAlign: "center" }}>🪴 {t("storeTitle")}</h1>
 
-      {/* Show country info */}
       <div style={{ textAlign: "center", margin: "10px 0", color: "#388e3c" }}>
         {userCountry
-          ? `Showing plants available in your country (${userCountry})`
-          : "Detecting your location..."}
+          ? t("showingCountry", { country: userCountry })
+          : t("detectingLocation")}
       </div>
 
       {/* Search and Filters */}
@@ -170,7 +182,7 @@ const PlantShop = () => {
       >
         <input
           type="text"
-          placeholder="Search plant by name..."
+          placeholder={t("searchPlaceholder")}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           style={{
@@ -184,7 +196,7 @@ const PlantShop = () => {
         />
 
         <div style={{ minWidth: 250 }}>
-          <label style={{ marginRight: 8 }}>Price Range:</label>
+          <label style={{ marginRight: 8 }}>{t("priceRange")}:</label>
           <input
             type="range"
             min={minPrice}
@@ -214,7 +226,7 @@ const PlantShop = () => {
           }}
           onClick={() => setShowCart((v) => !v)}
         >
-          <i className="fas fa-shopping-cart"></i> View Cart
+          <i className="fas fa-shopping-cart"></i> {t("viewCart")}
           {cartCount > 0 && (
             <span
               style={{
@@ -246,29 +258,24 @@ const PlantShop = () => {
           marginTop: 10,
         }}
       >
-
-        {/* If geo failed or still loading */}
         {!userCountry && (
           <p style={{ fontStyle: "italic", opacity: 0.6 }}>
-            Loading location...
+            {t("loadingLocation")}
           </p>
         )}
-        {/* If no plants for country */}
         {userCountry && countryFiltered.length === 0 && (
           <p style={{ fontStyle: "italic", opacity: 0.6 }}>
-            No service available in your area.
+            {t("noService")}
           </p>
         )}
-        {/* If plants exist but filtered out by search/price */}
         {userCountry && countryFiltered.length > 0 && filteredPlants.length === 0 && (
           <p style={{ fontStyle: "italic", opacity: 0.6 }}>
-            No plants found for this search/price.
+            {t("noPlantsFound")}
           </p>
         )}
-
         {filteredPlants.length === 0 && (
           <p style={{ fontStyle: "italic", opacity: 0.6 }}>
-            No plants found for this search/price.
+            {t("noPlantsFound")}
           </p>
         )}
         {filteredPlants.map((plant) => (
@@ -301,7 +308,6 @@ const PlantShop = () => {
                 overflow: "hidden",
               }}
             >
-              {/* Show plant image if available, else fallback */}
               {plant.imageUrl ? (
                 <img
                   src={plant.imageUrl}
@@ -325,7 +331,7 @@ const PlantShop = () => {
                 textAlign: "center",
               }}
             >
-              {plant.description || "No description available."}
+              {plant.description || t("noDescription")}
             </p>
             <button
               onClick={() => addToCart(plant)}
@@ -340,13 +346,12 @@ const PlantShop = () => {
                 cursor: "pointer",
               }}
             >
-              <i className="fas fa-cart-plus"></i> Add to Cart
+              <i className="fas fa-cart-plus"></i> {t("addToCart")}
             </button>
           </div>
         ))}
       </div>
 
-      {/* Cart Modal/Panel */}
       {showCart && (
         <div
           style={{
@@ -377,17 +382,17 @@ const PlantShop = () => {
               color: "#388e3c",
               cursor: "pointer",
             }}
-            title="Close"
+            title={t("close")}
           >
             ×
           </button>
           <h3 style={{ marginBottom: 18 }}>
-            <i className="fas fa-shopping-cart"></i> Your Cart
+            <i className="fas fa-shopping-cart"></i> {t("yourCart")}
           </h3>
           {!cart.items || cart.items.length === 0 ? (
             <div style={{ textAlign: "center", marginTop: 40 }}>
               <i className="fas fa-seedling" style={{ fontSize: 38, color: "#b6ccb9" }}></i>
-              <p style={{ color: "#888" }}>Cart is empty.</p>
+              <p style={{ color: "#888" }}>{t("cartEmpty")}</p>
             </div>
           ) : (
             <div>
@@ -451,7 +456,7 @@ const PlantShop = () => {
                         fontSize: 17,
                         cursor: "pointer",
                       }}
-                      title="Remove from cart"
+                      title={t("removeFromCart")}
                     >
                       <i className="fas fa-trash"></i>
                     </button>
@@ -460,7 +465,7 @@ const PlantShop = () => {
               ))}
               <div style={{ borderTop: "1px solid #b6ccb9", margin: "18px 0" }}></div>
               <div style={{ textAlign: "right", fontWeight: 600, fontSize: 17, color: "#388e3c" }}>
-                Total:{" "}
+                {t("total")}:{" "}
                 {formatPrice(
                   cart.items.reduce((sum, item) => sum + item.plant.price * item.quantity, 0)
                 )}
@@ -483,7 +488,7 @@ const PlantShop = () => {
                   width: "100%",
                 }}
               >
-                <i className="fas fa-credit-card"></i> Checkout
+                <i className="fas fa-credit-card"></i> {t("checkout")}
               </button>
             </div>
           )}

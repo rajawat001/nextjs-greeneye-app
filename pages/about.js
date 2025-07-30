@@ -1,14 +1,28 @@
-import Head from 'next/head'
-import About from '@/components/About'
+import { useTranslations } from 'next-intl';
+import Seo from '@/components/common/Seo';
+import About from '@/components/About';
+
+export function getStaticProps({ locale }) {
+  return {
+    props: {
+      messages: require(`../locales/${locale}.json`),
+      locale,
+    }
+  }
+}
 
 export default function AboutPage() {
+  const t = useTranslations('about');
   return (
     <>
-      <Head>
-        <title>About Us | GreenEye Foundation</title>
-        <meta name="description" content="Learn more about GreenEye, our mission, and our impact on the environment." />
-      </Head>
+      <Seo
+        title={t('seoTitle')}
+        description={t('seoDescription')}
+        ogTitle={t('seoTitle')}
+        ogDescription={t('seoDescription')}
+        canonical="https://greeneye.foundation/about"
+      />
       <About />
     </>
-  )
+  );
 }

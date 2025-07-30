@@ -1,35 +1,34 @@
-import Head from 'next/head'
-import Impact from '@/components/Impact'
+import { useTranslations } from 'next-intl';
+import Seo from '@/components/common/Seo';
+import Impact from '@/components/Impact';
+
+export function getStaticProps({ locale }) {
+  return {
+    props: {
+      messages: require(`../locales/${locale}.json`),
+      locale,
+    }
+  }
+}
 
 export default function ImpactPage() {
+  const t = useTranslations('impact');
   return (
     <>
-      <Head>
-        <title>Our Impact | GreenEye</title>
-        <meta
-          name="description"
-          content="Measurable results and stories from our global reforestation journey. See how GreenEye is making a difference."
-        />
-        <meta property="og:title" content="Our Impact | GreenEye" />
-        <meta
-          property="og:description"
-          content="Measurable results and stories from our global reforestation journey. See how GreenEye is making a difference."
-        />
-        <meta property="og:type" content="website" />
-        {/* Extend with canonical/OG/Twitter as needed */}
-      </Head>
-
+      <Seo
+        title={t('seoTitle', { defaultMessage: 'Our Impact | GreenEye' })}
+        description={t('seoDescription', { defaultMessage: "Measurable results and stories from our global reforestation journey. See how GreenEye is making a difference." })}
+        ogTitle={t('seoTitle', { defaultMessage: 'Our Impact | GreenEye' })}
+        ogDescription={t('seoDescription', { defaultMessage: "Measurable results and stories from our global reforestation journey. See how GreenEye is making a difference." })}
+        canonical="https://greeneye.foundation/impact"
+      />
       <section className="page-header">
         <div className="container">
-          <h1>Our Impact</h1>
-          <p>
-            Measurable results and stories from our global reforestation
-            journey.
-          </p>
+          <h1>{t('pageTitle', { defaultMessage: 'Our Impact' })}</h1>
+          <p>{t('pageSubtitle', { defaultMessage: "Measurable results and stories from our global reforestation journey." })}</p>
         </div>
       </section>
-
       <Impact />
     </>
-  )
+  );
 }

@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useRouter } from "next/router";
+import { useTranslations } from "next-intl";
 
 const Checkout = () => {
+  const t = useTranslations("checkout");
   const [cart, setCart] = useState(null);
   const [userInfo, setUserInfo] = useState({
     name: "",
@@ -26,7 +28,7 @@ const Checkout = () => {
       try {
         const token = localStorage.getItem("authToken");
         if (!token) {
-          setError("You must be logged in to view your cart.");
+          setError(t("loginRequired"));
           return;
         }
         const res = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart`, {
@@ -36,7 +38,7 @@ const Checkout = () => {
         });
         setCart(res.data);
       } catch (err) {
-        setError(err.response?.data?.message || "Could not fetch cart. Please try again.");
+        setError(err.response?.data?.message || t("fetchCartError"));
       }
     };
 
@@ -66,9 +68,10 @@ const Checkout = () => {
         console.error("Failed to fetch user info:", error);
       }
     };
-    
+
     fetchCart();
     fetchUserInfo();
+    // eslint-disable-next-line
   }, []);
 
   const total =
@@ -81,11 +84,11 @@ const Checkout = () => {
   const validate = () => {
     const { name, email, phone, street, city, state, pincode } = userInfo;
     if (!name || !email || !phone || !street || !city || !state || !pincode)
-      return "Please fill all fields";
-    if (!/^\d{10}$/.test(phone)) return "Enter a valid 10-digit phone number";
-    if (!/\S+@\S+\.\S+/.test(email)) return "Enter a valid email";
-    if (!/^\d{6}$/.test(pincode)) return "Enter a valid 6-digit pincode";
-    if (!cart || !cart.items || cart.items.length === 0) return "Your cart is empty";
+      return t("fillAllFields");
+    if (!/^\d{10}$/.test(phone)) return t("invalidPhone");
+    if (!/\S+@\S+\.\S+/.test(email)) return t("invalidEmail");
+    if (!/^\d{6}$/.test(pincode)) return t("invalidPincode");
+    if (!cart || !cart.items || cart.items.length === 0) return t("cartEmpty");
     return "";
   };
 
@@ -104,7 +107,7 @@ const Checkout = () => {
     try {
       const token = localStorage.getItem("authToken");
       if (!token) {
-        setError("You must be logged in to place an order.");
+        setError(t("loginRequired"));
         setPlacing(false);
         return;
       }
@@ -144,7 +147,7 @@ const Checkout = () => {
           amount: createdOrder.totalPrice * 100,
           currency: "INR",
           name: "GreenEye Store",
-          description: "Plant Purchase",
+          description: t("razorpayDesc"),
           order_id: createdOrder.paymentResult.id,
           handler: async function (response) {
             const verifyRes = await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/payment/verify`, {
@@ -157,11 +160,11 @@ const Checkout = () => {
             });
 
             if (verifyRes.data.success) {
-              setSuccess("Payment successful! 🌱");
+              setSuccess(t("paymentSuccess"));
               setCart(null);
               router.push("/myorders");
             } else {
-              setError("Payment verification failed.");
+              setError(t("paymentVerifyFail"));
             }
           },
           prefill: {
@@ -172,33 +175,39 @@ const Checkout = () => {
           theme: { color: "#388e3c" },
         };
 
-        const rzp = new Razorpay(razorpayOptions);
+        const rzp = new window.Razorpay(razorpayOptions);
         rzp.open();
       } else {
-        setSuccess("Order placed successfully with COD!");
+        setSuccess(t("orderPlacedCOD"));
         setCart(null);
         router.push("/myorders");
       }
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to place order.");
+      setError(err.response?.data?.message || t("placeOrderFail"));
     } finally {
       setPlacing(false);
     }
   };
 
-
   return (
-    <div style={{ maxWidth: 600, margin: "50px auto", padding: 24, background: "#fff", borderRadius: 12, boxShadow: "0 2px 16px #e0e0e0" }}>
-      <h2 style={{ marginBottom: 22 }}>Checkout</h2>
+    <div style={{
+      maxWidth: 600,
+      margin: "50px auto",
+      padding: 24,
+      background: "#fff",
+      borderRadius: 12,
+      boxShadow: "0 2px 16px #e0e0e0"
+    }}>
+      <h2 style={{ marginBottom: 22 }}>{t("checkoutTitle")}</h2>
       <form onSubmit={handlePlaceOrder} autoComplete="off">
         {[
-          { label: "Name", name: "name" },
-          { label: "Email", name: "email", type: "email" },
-          { label: "Phone", name: "phone", type: "tel", pattern: "\\d{10}", maxLength: 10 },
-          { label: "Shipping Address", name: "street", isTextarea: true },
-          { label: "City", name: "city" },
-          { label: "State", name: "state" },
-          { label: "Pincode", name: "pincode", pattern: "\\d{6}", maxLength: 6 },
+          { label: t("name"), name: "name" },
+          { label: t("email"), name: "email", type: "email" },
+          { label: t("phone"), name: "phone", type: "tel", pattern: "\\d{10}", maxLength: 10 },
+          { label: t("shippingAddress"), name: "street", isTextarea: true },
+          { label: t("city"), name: "city" },
+          { label: t("state"), name: "state" },
+          { label: t("pincode"), name: "pincode", pattern: "\\d{6}", maxLength: 6 },
         ].map((field) => (
           <div style={{ marginBottom: 16 }} key={field.name}>
             <label>{field.label}*</label>
@@ -228,7 +237,7 @@ const Checkout = () => {
         ))}
 
         <div style={{ marginBottom: 20 }}>
-          <label>Payment Method*</label>
+          <label>{t("paymentMethod")}*</label>
           <div>
             {["COD", "Razorpay"].map((method) => (
               <label key={method} style={{ marginRight: 28 }}>
@@ -239,13 +248,13 @@ const Checkout = () => {
                   checked={paymentMethod === method}
                   onChange={() => setPaymentMethod(method)}
                 />{" "}
-                {method === "COD" ? "Cash on Delivery" : "Online Payment"}
+                {method === "COD" ? t("cod") : t("onlinePayment")}
               </label>
             ))}
           </div>
         </div>
 
-        <h3>Order Summary</h3>
+        <h3>{t("orderSummary")}</h3>
         {cart && cart.items?.length > 0 ? (
           <ul style={{ padding: 0, listStyle: "none", marginBottom: 8 }}>
             {cart.items.map((item) => (
@@ -259,10 +268,10 @@ const Checkout = () => {
             ))}
           </ul>
         ) : (
-          <div style={{ color: "#b62222", marginBottom: 8 }}>No items in your cart.</div>
+          <div style={{ color: "#b62222", marginBottom: 8 }}>{t("cartNoItems")}</div>
         )}
         <div style={{ textAlign: "right", fontWeight: 600, fontSize: 18, color: "#388e3c" }}>
-          Total: ₹{total}
+          {t("total")}: ₹{total}
         </div>
 
         {error && <div style={{ color: "#b62222", marginTop: 12 }}>{error}</div>}
@@ -283,7 +292,7 @@ const Checkout = () => {
             cursor: placing ? "not-allowed" : "pointer",
           }}
         >
-          {placing ? "Placing Order..." : "Place Order"}
+          {placing ? t("placingOrder") : t("placeOrder")}
         </button>
       </form>
     </div>

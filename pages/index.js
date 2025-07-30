@@ -1,5 +1,5 @@
-import React from "react";
-import Head from "next/head";
+// pages/index.js
+import { useTranslations } from 'next-intl';
 import Hero from "@/components/Hero";
 import About from "@/components/About";
 import Donate from "@/components/Donate";
@@ -8,28 +8,36 @@ import Contact from "@/components/Contact";
 import Volunteer from "@/components/Volunteer";
 import Programs from "@/components/Programs";
 import BlogIndex from "@/components/BlogIndex";
+import Seo from "@/components/common/Seo";
 
-const HomePage = () => {
+export function getStaticProps({ locale }) {
+  return {
+    props: {
+      messages: require(`../locales/${locale}.json`),
+      locale,
+    }
+  }
+};
+
+export default function HomePage() {
+  const t = useTranslations('home');
   return (
     <>
-      <Head>
-        <title>GreenEye Foundation | Home</title>
-        <meta name="description" content="GreenEye Foundation - Making the planet greener through community-driven plantation and environmental care." />
-        <meta property="og:title" content="GreenEye Foundation" />
-        <meta property="og:description" content="Join us in our mission to plant trees and protect the planet." />
-        <meta property="og:type" content="website" />
-      </Head>
-
+      <Seo
+        title={t('title')}
+        description={t('description')}
+        ogTitle={t('title')}
+        ogDescription={t('cta')}
+        ogType="website"
+      />
       <Hero />
       <About />
-      <BlogIndex/>
+      <BlogIndex />
       <Donate />
-      <Volunteer/>
-      <Programs/>
+      <Volunteer />
+      <Programs />
       <Impact />
       <Contact />
     </>
   );
-};
-
-export default HomePage;
+}

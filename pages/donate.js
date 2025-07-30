@@ -1,45 +1,34 @@
-import Head from 'next/head'
-import Donate from '@/components/Donate'
+import { useTranslations } from 'next-intl';
+import Seo from '@/components/common/Seo';
+import Donate from '@/components/Donate';
+
+export function getStaticProps({ locale }) {
+  return {
+    props: {
+      messages: require(`../locales/${locale}.json`),
+      locale,
+    }
+  }
+}
 
 export default function DonatePage() {
+  const t = useTranslations('donate');
   return (
     <>
-      <Head>
-        <title>Support GreenEye | Donate</title>
-        <meta
-          name="description"
-          content="Your donation helps us plant more trees and expand our environmental impact. Support GreenEye's mission for a greener planet."
-        />
-        <meta property="og:title" content="Support GreenEye | Donate" />
-        <meta
-          property="og:description"
-          content="Your donation helps us plant more trees and expand our environmental impact. Support GreenEye's mission for a greener planet."
-        />
-        <meta property="og:type" content="website" />
-
-        {/* Optional: Uncomment and adjust if needed */}
-        {/*
-        <link rel="canonical" href="https://greeneye.foundation/donate" />
-        <meta property="og:image" content="https://greeneye.foundation/assets/donate-og-image.jpg" />
-        <meta property="og:url" content="https://greeneye.foundation/donate" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:site" content="@greeneyeorg" />
-        <meta name="twitter:title" content="Support GreenEye | Donate" />
-        <meta name="twitter:description" content="Your donation helps us plant more trees and expand our environmental impact." />
-        <meta name="twitter:image" content="https://greeneye.foundation/assets/donate-og-image.jpg" />
-        */}
-      </Head>
-
+      <Seo
+        title={t('seoTitle', { defaultMessage: 'Support GreenEye | Donate' })}
+        description={t('seoDescription', { defaultMessage: "Your donation helps us plant more trees and expand our environmental impact. Support GreenEye's mission for a greener planet." })}
+        ogTitle={t('seoTitle', { defaultMessage: 'Support GreenEye | Donate' })}
+        ogDescription={t('seoDescription', { defaultMessage: "Your donation helps us plant more trees and expand our environmental impact. Support GreenEye's mission for a greener planet." })}
+        canonical="https://greeneye.foundation/donate"
+      />
       <section className="page-header">
         <div className="container">
-          <h1>Support GreenEye</h1>
-          <p>
-            Your donation helps us plant more trees and expand our environmental impact.
-          </p>
+          <h1>{t('pageTitle', { defaultMessage: 'Support GreenEye' })}</h1>
+          <p>{t('pageSubtitle', { defaultMessage: "Your donation helps us plant more trees and expand our environmental impact." })}</p>
         </div>
       </section>
-
       <Donate />
     </>
-  )
+  );
 }

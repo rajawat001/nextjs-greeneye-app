@@ -1,8 +1,8 @@
-// src/components/Donate.jsx
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { showNotification } from "@/components/Notification";
 import { useRouter } from "next/router";
+import { useTranslations } from "next-intl";
 
 const presetAmounts = [100, 500, 1000, 5000];
 
@@ -16,11 +16,15 @@ const Donate = () => {
   });
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const t = useTranslations("donate");
 
-  // 🟢 Auto-fill profile info if logged in
+  // Auto-fill profile info if logged in (safe for SSR)
   useEffect(() => {
     const fetchProfile = async () => {
-      const token = typeof window !== "undefined" ? localStorage.getItem("authToken") : null;
+      let token = null;
+      if (typeof window !== "undefined") {
+        token = localStorage.getItem("authToken");
+      }
       if (!token) return;
 
       try {
@@ -36,7 +40,7 @@ const Donate = () => {
           donorPhone: data.phone || "",
         }));
       } catch (error) {
-        console.error("Failed to fetch user profile", error);
+        // ignore
       }
     };
 
@@ -62,7 +66,7 @@ const Donate = () => {
     e.preventDefault();
 
     if (!amount || parseInt(amount, 10) < 50) {
-      showNotification("Please enter a minimum donation amount of ₹50.", "error");
+      showNotification(t("minAmountError", { defaultMessage: "Please enter a minimum donation amount of ₹50." }), "error");
       return;
     }
 
@@ -76,44 +80,55 @@ const Donate = () => {
         amount: parseInt(amount, 10),
       });
 
-      const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-        amount: data.amount,
-        currency: data.currency,
-        name: "GreenEye Donation",
-        description: "Thank you for your support!",
-        order_id: data.orderId,
-        handler: async function (response) {
-          const verifyRes = await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/donations/verify`, {
-            razorpay_order_id: response.razorpay_order_id,
-            razorpay_payment_id: response.razorpay_payment_id,
-            razorpay_signature: response.razorpay_signature,
-            donationId: data.donationId,
-          });
+      // Only open Razorpay if we're on the client
+      if (typeof window !== "undefined" && window.Razorpay) {
+        const options = {
+          key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+          amount: data.amount,
+          currency: data.currency,
+          name: t("razorpayTitle", { defaultMessage: "GreenEye Donation" }),
+          description: t("razorpayDesc", { defaultMessage: "Thank you for your support!" }),
+          order_id: data.orderId,
+          handler: async function (response) {
+            try {
+              const verifyRes = await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/donations/verify`, {
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                donationId: data.donationId,
+              });
 
-          if (verifyRes.data.success) {
-            showNotification(`Thank you for donating ₹${amount}! 🌿`, "success");
-            setAmount("");
-            setForm({ donorName: "", donorEmail: "", donorPhone: "" });
-            setActiveBtn(null);
-            router.push("/mydonation");
-          } else {
-            showNotification("Payment verification failed. Please try again.", "error");
-          }
-        },
-        prefill: {
-          name: form.donorName,
-          email: form.donorEmail,
-          contact: form.donorPhone,
-        },
-        theme: { color: "#4CAF50" },
-      };
+              if (verifyRes.data.success) {
+                showNotification(
+                  t("successMessage", { amount }),
+                  "success"
+                );
+                setAmount("");
+                setForm({ donorName: "", donorEmail: "", donorPhone: "" });
+                setActiveBtn(null);
+                router.push("/mydonation");
+              } else {
+                showNotification(t("verifyFail", { defaultMessage: "Payment verification failed. Please try again." }), "error");
+              }
+            } catch {
+              showNotification(t("verifyFail", { defaultMessage: "Payment verification failed. Please try again." }), "error");
+            }
+          },
+          prefill: {
+            name: form.donorName,
+            email: form.donorEmail,
+            contact: form.donorPhone,
+          },
+          theme: { color: "#4CAF50" },
+        };
 
-      const razor = new window.Razorpay(options);
-      razor.open();
+        const razor = new window.Razorpay(options);
+        razor.open();
+      } else {
+        showNotification(t("donationFail", { defaultMessage: "Donation failed. Please try again later." }), "error");
+      }
     } catch (err) {
-      console.error(err);
-      showNotification("Donation failed. Please try again later.", "error");
+      showNotification(t("donationFail", { defaultMessage: "Donation failed. Please try again later." }), "error");
     } finally {
       setLoading(false);
     }
@@ -124,28 +139,28 @@ const Donate = () => {
       <div className="container">
         <div className="donation-content">
           <div className="donation-info">
-            <h3>How Your Donation Helps</h3>
+            <h3>{t("impactTitle")}</h3>
             <div className="donation-breakdown">
               <div className="breakdown-item">
                 <div className="amount">₹100</div>
-                <div className="description">Plants 2 saplings with care for 1 year</div>
+                <div className="description">{t("breakdown100")}</div>
               </div>
               <div className="breakdown-item">
                 <div className="amount">₹500</div>
-                <div className="description">Supports a community plantation drive</div>
+                <div className="description">{t("breakdown500")}</div>
               </div>
               <div className="breakdown-item">
                 <div className="amount">₹1000</div>
-                <div className="description">Sponsors environmental education workshop</div>
+                <div className="description">{t("breakdown1000")}</div>
               </div>
               <div className="breakdown-item">
                 <div className="amount">₹5000</div>
-                <div className="description">Funds urban reforestation project</div>
+                <div className="description">{t("breakdown5000")}</div>
               </div>
             </div>
           </div>
           <div className="donation-form-container">
-            <h3>Make a Donation</h3>
+            <h3>{t("formTitle")}</h3>
             <div className="donation-amounts">
               {presetAmounts.map((amt, idx) => (
                 <button
@@ -164,7 +179,7 @@ const Donate = () => {
                   type="number"
                   id="customAmount"
                   name="amount"
-                  placeholder="Enter amount (₹)"
+                  placeholder={t("placeholderAmount")}
                   min="50"
                   value={amount}
                   onChange={handleAmountChange}
@@ -177,7 +192,7 @@ const Donate = () => {
                   type="text"
                   id="donorName"
                   name="donorName"
-                  placeholder="Full Name"
+                  placeholder={t("placeholderName")}
                   value={form.donorName}
                   onChange={handleChange}
                   required
@@ -189,7 +204,7 @@ const Donate = () => {
                   type="email"
                   id="donorEmail"
                   name="donorEmail"
-                  placeholder="Email Address"
+                  placeholder={t("placeholderEmail")}
                   value={form.donorEmail}
                   onChange={handleChange}
                   required
@@ -201,7 +216,7 @@ const Donate = () => {
                   type="tel"
                   id="donorPhone"
                   name="donorPhone"
-                  placeholder="Phone Number"
+                  placeholder={t("placeholderPhone")}
                   value={form.donorPhone}
                   onChange={handleChange}
                   required
@@ -211,18 +226,18 @@ const Donate = () => {
               <button type="submit" className="btn btn-primary btn-full" disabled={loading}>
                 {loading ? (
                   <>
-                    <i className="fas fa-spinner fa-spin"></i> Processing...
+                    <i className="fas fa-spinner fa-spin"></i> {t("processing")}
                   </>
                 ) : (
                   <>
-                    <i className="fas fa-heart"></i> Donate Now
+                    <i className="fas fa-heart"></i> {t("donateNow")}
                   </>
                 )}
               </button>
             </form>
             <p className="donation-note">
               <i className="fas fa-shield-alt"></i>
-              All donations are secure and tax-deductible under 80G
+              {t("note")}
             </p>
           </div>
         </div>

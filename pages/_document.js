@@ -1,9 +1,11 @@
 // pages/_document.js
 import { Html, Head, Main, NextScript } from 'next/document';
 
-export default function Document() {
+export default function Document(props) {
+  const locale = props.__NEXT_DATA__?.locale || 'en';
+
   return (
-    <Html lang="en">
+    <Html lang={locale}>
       <Head>
         {/* Favicon */}
         <link rel="icon" href="/GreenEyeLogo.ico" />
@@ -12,7 +14,6 @@ export default function Document() {
         <link
           rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
-          integrity="sha512-...your-integrity-if-needed..."
           crossOrigin="anonymous"
           referrerPolicy="no-referrer"
         />
@@ -35,10 +36,7 @@ export default function Document() {
 
         {/* Meta Tags */}
         <meta name="theme-color" content="#000000" />
-        <meta
-          name="description"
-          content="Web site created using Next.js"
-        />
+        <meta name="description" content="Web site created using Next.js" />
       </Head>
       <body>
         <Main />

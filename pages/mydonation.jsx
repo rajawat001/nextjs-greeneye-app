@@ -1,11 +1,22 @@
-'use client'
+//'use client'
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import ProfileTabs from '@/components/ProfileTabs';
+import { useTranslations } from 'next-intl';
+
+export function getStaticProps({ locale }) {
+  return {
+    props: {
+      messages: require(`../locales/${locale}.json`),
+      locale,
+    }
+  };
+}
 
 export default function MyDonations() {
+    const t = useTranslations('myDonations');
     const [donations, setDonations] = useState([])
     const [loading, setLoading] = useState(true)
     const router = useRouter()
@@ -35,7 +46,7 @@ export default function MyDonations() {
         return (
             <div className="container" style={{ maxWidth: 600, marginTop: 40 }}>
                 <div style={{ textAlign: 'center', padding: '2rem 0' }}>
-                    <i className="fas fa-spinner fa-spin"></i> Loading donations...
+                    <i className="fas fa-spinner fa-spin"></i> {t('loading')}
                 </div>
             </div>
         )
@@ -44,7 +55,7 @@ export default function MyDonations() {
     if (!donations.length) {
         return (
             <div className="container" style={{ maxWidth: 600, marginTop: 60 }}>
-                <div style={{ color: '#888' }}>No donations found.</div>
+                <div style={{ color: '#888' }}>{t('notFound')}</div>
             </div>
         )
     }
@@ -53,9 +64,8 @@ export default function MyDonations() {
         <div className="container" style={{ maxWidth: 600, marginTop: 70 }}>
             <ProfileTabs />
             <h2 style={{ marginTop: 5, marginBottom: 20 }}>
-                <i className="fas fa-hand-holding-heart"></i> My Donations
+                <i className="fas fa-hand-holding-heart"></i> {t('heading')}
             </h2>
-
             {donations.map((donation) => (
                 <Link
                     key={donation._id}
@@ -74,23 +84,23 @@ export default function MyDonations() {
                     }}
                 >
                     <div style={{ fontWeight: 600, fontSize: 16 }}>
-                        Donation #{donation._id.slice(-6).toUpperCase()}
+                        {t('donation')} #{donation._id.slice(-6).toUpperCase()}
                     </div>
                     <div style={{ fontSize: 13, color: '#666' }}>
-                        Date: {new Date(donation.createdAt).toLocaleString()}
+                        {t('date')}: {new Date(donation.createdAt).toLocaleString()}
                     </div>
                     <div style={{ fontSize: 13, color: '#888', marginTop: 6 }}>
-                        Amount: ₹{donation.amount}
+                        {t('amount')}: ₹{donation.amount}
                     </div>
                     <div>
-                        <span style={{ fontWeight: 500 }}>Status:</span>{' '}
+                        <span style={{ fontWeight: 500 }}>{t('status')}:</span>{' '}
                         <span
                             style={{
                                 color: donation.isPaid ? '#388e3c' : '#b62222',
                                 fontWeight: 600,
                             }}
                         >
-                            {donation.isPaid ? 'Paid' : 'Pending'}
+                            {donation.isPaid ? t('paid') : t('pending')}
                         </span>
                     </div>
                 </Link>

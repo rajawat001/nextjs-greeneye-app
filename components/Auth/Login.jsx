@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/router";
-import { showNotification } from "@/components/Notification"; // Ensure this is compatible with Next.js
+import { showNotification } from "@/components/Notification";
+import { useTranslations } from "next-intl";
 
 const Login = ({ onSwitch, onLogin }) => {
+  const t = useTranslations("login");
   const [form, setForm] = useState({
     email: "",
     password: "",
@@ -30,11 +32,11 @@ const Login = ({ onSwitch, onLogin }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!isEmailValid(form.email)) {
-      showNotification("Please enter a valid email address.", "error");
+      showNotification(t("invalidEmail"), "error");
       return;
     }
     if (!form.password) {
-      showNotification("Please enter your password.", "error");
+      showNotification(t("enterPassword"), "error");
       return;
     }
 
@@ -51,7 +53,7 @@ const Login = ({ onSwitch, onLogin }) => {
 
       if (data.token) {
         localStorage.setItem("authToken", data.token);
-        showNotification("Login successful!", "success");
+        showNotification(t("loginSuccess"), "success");
         router.push("/profile");
       }
 
@@ -60,7 +62,7 @@ const Login = ({ onSwitch, onLogin }) => {
       setForm({ email: "", password: "", remember: false });
     } catch (error) {
       showNotification(
-        error.response?.data?.message || "Invalid email or password.",
+        error.response?.data?.message || t("invalidCredentials"),
         "error"
       );
     } finally {
@@ -70,13 +72,13 @@ const Login = ({ onSwitch, onLogin }) => {
 
   return (
     <form className="auth-form" id="loginForm" onSubmit={handleSubmit} autoComplete="off">
-      <h3>Sign in to Your Account</h3>
+      <h3>{t("signInTitle")}</h3>
       <div className="form-group">
         <input
           type="email"
           id="loginEmail"
           name="email"
-          placeholder="Email Address"
+          placeholder={t("emailPlaceholder")}
           value={form.email}
           onChange={handleChange}
           className={form.email && !isEmailValid(form.email) ? "invalid" : ""}
@@ -89,7 +91,7 @@ const Login = ({ onSwitch, onLogin }) => {
           type={showPwd ? "text" : "password"}
           id="loginPassword"
           name="password"
-          placeholder="Password"
+          placeholder={t("passwordPlaceholder")}
           value={form.password}
           onChange={handleChange}
           required
@@ -100,7 +102,7 @@ const Login = ({ onSwitch, onLogin }) => {
           className="password-toggle"
           onClick={togglePassword}
           tabIndex={-1}
-          aria-label={showPwd ? "Hide password" : "Show password"}
+          aria-label={showPwd ? t("hidePassword") : t("showPassword")}
         >
           <i className={`fas ${showPwd ? "fa-eye-slash" : "fa-eye"}`}></i>
         </button>
@@ -114,10 +116,10 @@ const Login = ({ onSwitch, onLogin }) => {
             onChange={handleChange}
           />
           <span className="checkmark"></span>
-          Remember me
+          {t("rememberMe")}
         </label>
         <a href="#" className="link" tabIndex={-1}>
-          Forgot password?
+          {t("forgotPassword")}
         </a>
       </div>
       <button
@@ -127,35 +129,35 @@ const Login = ({ onSwitch, onLogin }) => {
       >
         {loading ? (
           <>
-            <i className="fas fa-spinner fa-spin"></i> Signing in...
+            <i className="fas fa-spinner fa-spin"></i> {t("signingIn")}
           </>
         ) : (
           <>
-            <i className="fas fa-sign-in-alt"></i> Sign In
+            <i className="fas fa-sign-in-alt"></i> {t("signInBtn")}
           </>
         )}
       </button>
       <div className="divider" style={{ margin: "2rem 0" }}>
-        <span>OR</span>
+        <span>{t("or")}</span>
       </div>
       <button
         type="button"
         className="btn social-btn google-btn btn-full"
         onClick={() =>
-          showNotification("Google login integration would be implemented here", "info")
+          showNotification(t("googleLoginMsg"), "info")
         }
       >
-        <i className="fab fa-google"></i> Sign in with Google
+        <i className="fab fa-google"></i> {t("signInWithGoogle")}
       </button>
       <div className="auth-switch">
         <p>
-          New to GreenEye?{" "}
+          {t("newToGreenEye")}{" "}
           <button
             className="link-btn"
             type="button"
             onClick={() => router.push("/register")}
           >
-            Create Account
+            {t("createAccount")}
           </button>
         </p>
       </div>

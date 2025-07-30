@@ -1,36 +1,40 @@
 import React, { useEffect, useRef } from "react";
+import { useTranslations } from "next-intl";
 
 /**
  * Impact section: stats, visual, and key points.
  */
-const stats = [
-  {
-    icon: "fas fa-seedling",
-    label: "Trees Planted",
-    number: 50000,
-    description: "Across 25 cities in the last 3 years",
-  },
-  {
-    icon: "fas fa-wind",
-    label: "Tons CO₂ Absorbed",
-    number: 75000,
-    description: "Annual carbon dioxide absorption",
-  },
-  {
-    icon: "fas fa-users",
-    label: "Active Volunteers",
-    number: 1200,
-    description: "Dedicated environmental advocates",
-  },
-  {
-    icon: "fas fa-map-marked-alt",
-    label: "Cities Covered",
-    number: 25,
-    description: "Growing network of green initiatives",
-  },
-];
-
 const Impact = () => {
+  const t = useTranslations("impact");
+
+  // Stats now use translations
+  const stats = [
+    {
+      icon: "fas fa-seedling",
+      label: t("statTrees"),
+      number: 50000,
+      description: t("statTreesDesc"),
+    },
+    {
+      icon: "fas fa-wind",
+      label: t("statCO2"),
+      number: 75000,
+      description: t("statCO2Desc"),
+    },
+    {
+      icon: "fas fa-users",
+      label: t("statVolunteers"),
+      number: 1200,
+      description: t("statVolunteersDesc"),
+    },
+    {
+      icon: "fas fa-map-marked-alt",
+      label: t("statCities"),
+      number: 25,
+      description: t("statCitiesDesc"),
+    },
+  ];
+
   // Animated counter effect
   const numberRefs = useRef([]);
 
@@ -55,7 +59,7 @@ const Impact = () => {
         return () => cancelAnimationFrame(frame);
       }
     });
-  }, []);
+  }, [stats]);
 
   return (
     <section id="impact" className="impact">
@@ -82,20 +86,17 @@ const Impact = () => {
           <div className="impact-image">
             <img
               src="/assets/GreenLandscape.png"
-              alt="Green Landscape"
+              alt={t("landscapeAlt")}
             />
           </div>
           <div className="impact-content">
-            <h3>Creating Lasting Change</h3>
-            <p>
-              Every tree we plant contributes to cleaner air, reduced carbon footprint, and biodiversity conservation.
-              Our strategic approach ensures maximum environmental benefit through:
-            </p>
+            <h3>{t("heading")}</h3>
+            <p>{t("blurb")}</p>
             <ul className="impact-list">
-              <li><i className="fas fa-leaf"></i> Native species selection for optimal growth</li>
-              <li><i className="fas fa-leaf"></i> Long-term maintenance and care programs</li>
-              <li><i className="fas fa-leaf"></i> Community education and involvement</li>
-              <li><i className="fas fa-leaf"></i> Habitat restoration and wildlife protection</li>
+              <li><i className="fas fa-leaf"></i> {t("listNative")}</li>
+              <li><i className="fas fa-leaf"></i> {t("listCare")}</li>
+              <li><i className="fas fa-leaf"></i> {t("listEducation")}</li>
+              <li><i className="fas fa-leaf"></i> {t("listHabitat")}</li>
             </ul>
           </div>
         </div>

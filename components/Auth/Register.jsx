@@ -1,11 +1,13 @@
-'use client';
+//'use client';
 import React, { useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import { showNotification } from "@/components/Notification";
+import { useTranslations } from "next-intl";
 
 const Register = ({ onSwitch }) => {
+  const t = useTranslations("register");
   const [form, setForm] = useState({
     firstName: "",
     lastName: "",
@@ -20,7 +22,7 @@ const Register = ({ onSwitch }) => {
   const [showPwd, setShowPwd] = useState(false);
   const [showConfirmPwd, setShowConfirmPwd] = useState(false);
   const [loading, setLoading] = useState(false);
-  const router = useRouter(); // ✅ useRouter instead of useNavigate
+  const router = useRouter();
 
   const isEmailValid = (email) =>
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -47,30 +49,27 @@ const Register = ({ onSwitch }) => {
     e.preventDefault();
 
     if (!isPasswordMatch) {
-      showNotification("Passwords do not match!", "error");
+      showNotification(t("pwdNoMatch"), "error");
       return;
     }
 
     if (!isPasswordStrong(form.password)) {
-      showNotification(
-        "Password must be at least 8 characters with uppercase, lowercase, and number",
-        "error"
-      );
+      showNotification(t("pwdWeak"), "error");
       return;
     }
 
     if (!form.agreeTerms) {
-      showNotification("Please agree to Terms & Conditions", "error");
+      showNotification(t("agreeTermsMsg"), "error");
       return;
     }
 
     if (!isEmailValid(form.email)) {
-      showNotification("Please enter a valid email address.", "error");
+      showNotification(t("invalidEmail"), "error");
       return;
     }
 
     if (!isPhoneValid(form.phone)) {
-      showNotification("Please enter a valid phone number.", "error");
+      showNotification(t("invalidPhone"), "error");
       return;
     }
 
@@ -91,8 +90,8 @@ const Register = ({ onSwitch }) => {
 
       if (data.token) {
         localStorage.setItem("authToken", data.token);
-        showNotification("Account created successfully.", "success");
-        router.push("/profile"); // ✅ Next.js routing
+        showNotification(t("registerSuccess"), "success");
+        router.push("/profile");
       }
 
       setForm({
@@ -111,7 +110,7 @@ const Register = ({ onSwitch }) => {
       const errorMsg =
         error.response?.data?.message ||
         error.response?.data?.error ||
-        "Registration failed. Please try again.";
+        t("registerFail");
       showNotification(errorMsg, "error");
     } finally {
       setLoading(false);
@@ -125,7 +124,7 @@ const Register = ({ onSwitch }) => {
           <div className="qr-code">
             <img
               src="/assets/whatsappQR.png"
-              alt="WhatsApp QR Code"
+              alt={t("whatsappQRAlt")}
               className="qr-image"
               onError={(e) => {
                 e.target.style.display = "none";
@@ -140,22 +139,22 @@ const Register = ({ onSwitch }) => {
           </div>
           <div className="qr-instructions">
             <h3>
-              <i className="fab fa-whatsapp"></i> Register with WhatsApp
+              <i className="fab fa-whatsapp"></i> {t("registerWithWhatsapp")}
             </h3>
             <ol>
-              <li>Open WhatsApp on your phone</li>
-              <li>Tap the camera icon</li>
-              <li>Send "hi" message to start registration</li>
+              <li>{t("waStep1")}</li>
+              <li>{t("waStep2")}</li>
+              <li>{t("waStep3")}</li>
             </ol>
             <div className="whatsapp-benefits">
               <div className="benefit">
-                <i className="fas fa-bolt"></i> <span>Instant Registration</span>
+                <i className="fas fa-bolt"></i> <span>{t("waInstant")}</span>
               </div>
               <div className="benefit">
-                <i className="fas fa-bell"></i> <span>Event Notifications</span>
+                <i className="fas fa-bell"></i> <span>{t("waNotif")}</span>
               </div>
               <div className="benefit">
-                <i className="fas fa-users"></i> <span>Community Updates</span>
+                <i className="fas fa-users"></i> <span>{t("waCommunity")}</span>
               </div>
             </div>
           </div>
@@ -163,18 +162,18 @@ const Register = ({ onSwitch }) => {
       </div>
 
       <div className="divider">
-        <span>OR</span>
+        <span>{t("or")}</span>
       </div>
 
       <form className="auth-form" onSubmit={handleSubmit}>
-        <h3>Register with Email</h3>
+        <h3>{t("registerWithEmail")}</h3>
 
         <div className="form-row">
           <div className="form-group">
             <input
               type="text"
               name="firstName"
-              placeholder="First Name"
+              placeholder={t("firstName")}
               value={form.firstName}
               onChange={handleChange}
               required
@@ -185,7 +184,7 @@ const Register = ({ onSwitch }) => {
             <input
               type="text"
               name="lastName"
-              placeholder="Last Name"
+              placeholder={t("lastName")}
               value={form.lastName}
               onChange={handleChange}
               required
@@ -198,7 +197,7 @@ const Register = ({ onSwitch }) => {
           <input
             type="email"
             name="email"
-            placeholder="Email Address"
+            placeholder={t("email")}
             value={form.email}
             onChange={handleChange}
             required
@@ -211,7 +210,7 @@ const Register = ({ onSwitch }) => {
           <input
             type="tel"
             name="phone"
-            placeholder="Phone Number"
+            placeholder={t("phone")}
             value={form.phone}
             onChange={handleChange}
             required
@@ -224,7 +223,7 @@ const Register = ({ onSwitch }) => {
           <input
             type={showPwd ? "text" : "password"}
             name="password"
-            placeholder="Create Password"
+            placeholder={t("createPwd")}
             value={form.password}
             onChange={handleChange}
             required
@@ -235,6 +234,7 @@ const Register = ({ onSwitch }) => {
             type="button"
             className="password-toggle"
             onClick={() => togglePassword("password")}
+            aria-label={showPwd ? t("hidePassword") : t("showPassword")}
           >
             <i className={`fas ${showPwd ? "fa-eye-slash" : "fa-eye"}`}></i>
           </button>
@@ -244,7 +244,7 @@ const Register = ({ onSwitch }) => {
           <input
             type={showConfirmPwd ? "text" : "password"}
             name="confirmPassword"
-            placeholder="Confirm Password"
+            placeholder={t("confirmPwd")}
             value={form.confirmPassword}
             onChange={handleChange}
             required
@@ -257,6 +257,7 @@ const Register = ({ onSwitch }) => {
             type="button"
             className="password-toggle"
             onClick={() => togglePassword("confirm")}
+            aria-label={showConfirmPwd ? t("hidePassword") : t("showPassword")}
           >
             <i className={`fas ${showConfirmPwd ? "fa-eye-slash" : "fa-eye"}`}></i>
           </button>
@@ -272,10 +273,10 @@ const Register = ({ onSwitch }) => {
               required
             />
             <span className="checkmark"></span>
-            I agree to the{" "}
-            <Link href="/legal/terms-of-service" className="link">Terms & Conditions</Link>{" "}
-            and{" "}
-            <Link href="/legal/privacy-policy" className="link">Privacy Policy</Link>
+            {t("agreeMsg1")}{" "}
+            <Link href="/legal/terms-of-service" className="link">{t("termsLink")}</Link>{" "}
+            {t("agreeMsg2")}{" "}
+            <Link href="/legal/privacy-policy" className="link">{t("privacyLink")}</Link>
           </label>
         </div>
 
@@ -288,7 +289,7 @@ const Register = ({ onSwitch }) => {
               onChange={handleChange}
             />
             <span className="checkmark"></span>
-            Subscribe to our newsletter for environmental updates
+            {t("newsletter")}
           </label>
         </div>
 
@@ -299,11 +300,11 @@ const Register = ({ onSwitch }) => {
         >
           {loading ? (
             <>
-              <i className="fas fa-spinner fa-spin"></i> Creating Account...
+              <i className="fas fa-spinner fa-spin"></i> {t("creatingAccount")}
             </>
           ) : (
             <>
-              <i className="fas fa-user-plus"></i> Create Account
+              <i className="fas fa-user-plus"></i> {t("createAccount")}
             </>
           )}
         </button>
@@ -311,13 +312,13 @@ const Register = ({ onSwitch }) => {
 
       <div className="auth-switch">
         <p>
-          Already have an account?{" "}
+          {t("alreadyHaveAccount")}{" "}
           <button
             className="link-btn"
             type="button"
             onClick={() => router.push("/login")}
           >
-            Sign In
+            {t("signIn")}
           </button>
         </p>
       </div>

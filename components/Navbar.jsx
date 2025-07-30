@@ -1,42 +1,49 @@
 "use client";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useMemo  } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import axios from "axios";
+import { useTranslations } from "next-intl";
 
 const NAV_LINKS = [
-  { href: "/", label: "Home" },
-  { href: "/programs", label: "Programs" },
-  { href: "/impact", label: "Impact" },
-  { href: "/volunteer", label: "Volunteer" },
-  { href: "/donate", label: "Donate" },
-  { href: "/blog", label: "Blog" },
-  { href: "/contact", label: "Contact" },
+  { href: "/", labelKey: "home" },
+  { href: "/programs", labelKey: "programs" },
+  { href: "/impact", labelKey: "impact" },
+  { href: "/volunteer", labelKey: "volunteer" },
+  { href: "/donate", labelKey: "donate" },
+  { href: "/blog", labelKey: "blog" },
+  { href: "/contact", labelKey: "contact" },
 ];
 
 const Navbar = () => {
-  const [menuActive, setMenuActive] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("authToken"));
-  const [userName, setUserName] = useState("");
-  const [userInfo, setUserInfo] = useState("");
   const router = useRouter();
   const navMenuRef = useRef();
+  const [menuActive, setMenuActive] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userName, setUserName] = useState("");
+  const [userInfo, setUserInfo] = useState("");
 
-  // Close menu on route change
+
+  const t = useTranslations("navbar"); 
+
+  useEffect(() => {
+    setIsLoggedIn(!!localStorage.getItem("authToken"));
+  }, []);
+
   useEffect(() => setMenuActive(false), [router.pathname]);
 
-  // Scroll effect
   useEffect(() => {
     const handleScroll = () => {
       const navbar = document.getElementById("navbar");
-      if (window.scrollY > 100) navbar.classList.add("scrolled");
-      else navbar.classList.remove("scrolled");
+      if (navbar) {
+        if (window.scrollY > 100) navbar.classList.add("scrolled");
+        else navbar.classList.remove("scrolled");
+      }
     };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Sync auth across tabs
   useEffect(() => {
     const checkAuth = () => setIsLoggedIn(!!localStorage.getItem("authToken"));
     window.addEventListener("storage", checkAuth);
@@ -53,10 +60,10 @@ const Navbar = () => {
           headers: { Authorization: `Bearer ${token}` },
         })
         .then((res) => {
-          setUserName(res.data.name || "Profile");
+          setUserName(res.data.name || t("profile"));
           setUserInfo(res.data || {});
         })
-        .catch(() => setUserName("Profile"));
+        .catch(() => setUserName(t("profile")));
     } else {
       setUserName("");
     }
@@ -83,7 +90,7 @@ const Navbar = () => {
           {NAV_LINKS.map((link) => (
             <li key={link.href}>
               <Link href={link.href} className={`nav-link${isActive(link.href) ? " active" : ""}`}>
-                {link.label}
+                {t(link.labelKey)}
               </Link>
             </li>
           ))}
@@ -92,7 +99,7 @@ const Navbar = () => {
             <li>
               <Link href="/profile" className={`nav-link${isActive("/profile") ? " active" : ""}`}>
                 <i className="fas fa-user-circle" style={{ marginRight: 5 }}></i>
-                {userName || "Profile"}
+                {userName || t("profile")}
               </Link>
             </li>
           )}
@@ -100,7 +107,7 @@ const Navbar = () => {
           {!isLoggedIn && (
             <li>
               <Link href="/register" className={`nav-link${isActive("/register") ? " active" : ""}`}>
-                Register
+                {t("register")}
               </Link>
             </li>
           )}
@@ -113,14 +120,14 @@ const Navbar = () => {
                 style={{ background: "none", border: "none", padding: 0, cursor: "pointer" }}
               >
                 <i className="fas fa-sign-out-alt" style={{ marginRight: 5 }}></i>
-                Logout
+                {t("logout")}
               </button>
             </li>
           ) : (
             <li>
               <Link href="/login" className={`nav-link${isActive("/login") ? " active" : ""}`}>
                 <i className="fas fa-sign-in-alt" style={{ marginRight: 5 }}></i>
-                Login
+                {t("login")}
               </Link>
             </li>
           )}
@@ -150,3 +157,4 @@ const Navbar = () => {
 };
 
 export default Navbar;
+

@@ -1,29 +1,34 @@
-import Head from 'next/head'
-import Programs from '@/components/Programs'
+import { useTranslations } from 'next-intl';
+import Seo from '@/components/common/Seo';
+import Programs from '@/components/Programs';
+
+export function getStaticProps({ locale }) {
+  return {
+    props: {
+      messages: require(`../locales/${locale}.json`),
+      locale,
+    }
+  }
+}
 
 export default function ProgramsPage() {
+  const t = useTranslations('programs');
   return (
     <>
-      <Head>
-        <title>Our Programs | GreenEye</title>
-        <meta
-          name="description"
-          content="Explore our reforestation, education, and community initiatives. Join GreenEye's programs for a greener future."
-        />
-        <meta property="og:title" content="Our Programs | GreenEye" />
-        <meta
-          property="og:description"
-          content="Explore our reforestation, education, and community initiatives. Join GreenEye's programs for a greener future."
-        />
-        <meta property="og:type" content="website" />
-      </Head>
+      <Seo
+        title={t('seoTitle', { defaultMessage: 'Our Programs | GreenEye' })}
+        description={t('seoDescription', { defaultMessage: 'Explore our reforestation, education, and community initiatives. Join GreenEye\'s programs for a greener future.' })}
+        ogTitle={t('seoTitle', { defaultMessage: 'Our Programs | GreenEye' })}
+        ogDescription={t('seoDescription', { defaultMessage: 'Explore our reforestation, education, and community initiatives. Join GreenEye\'s programs for a greener future.' })}
+        canonical="https://greeneye.foundation/programs"
+      />
       <section className="page-header">
         <div className="container">
-          <h1>Our Programs</h1>
-          <p>Explore our reforestation, education, and community initiatives.</p>
+          <h1>{t('pageTitle', { defaultMessage: 'Our Programs' })}</h1>
+          <p>{t('pageSubtitle', { defaultMessage: 'Explore our reforestation, education, and community initiatives.' })}</p>
         </div>
       </section>
       <Programs />
     </>
-  )
+  );
 }

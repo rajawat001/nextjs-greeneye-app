@@ -2,16 +2,17 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useRouter } from "next/router";
 import { showNotification } from "@/components/Notification";
+import { useTranslations } from "next-intl";
 
 const cities = [
   "Jaipur", "Mumbai", "Delhi", "Bangalore", "Pune", "Hyderabad", "Chennai", "Kolkata", "Other"
 ];
 
 const availabilities = [
-  { value: "weekends", label: "Weekends Only" },
-  { value: "weekdays", label: "Weekdays" },
-  { value: "flexible", label: "Flexible" },
-  { value: "events", label: "Events Only" },
+  { value: "weekends", labelKey: "weekends" },
+  { value: "weekdays", labelKey: "weekdays" },
+  { value: "flexible", labelKey: "flexible" },
+  { value: "events", labelKey: "events" },
 ];
 
 const sectors = [
@@ -77,6 +78,7 @@ const professions = [
 ];
 
 const Volunteer = () => {
+  const t = useTranslations("volunteerForm");
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -94,14 +96,18 @@ const Volunteer = () => {
   const [isVolunteer, setIsVolunteer] = useState(false);
   const router = useRouter();
 
+  // Safely check authToken in useEffect, not during render
   useEffect(() => {
     const fetchProfile = async () => {
+      let token = null;
+      if (typeof window !== "undefined") {
+        token = localStorage.getItem("authToken");
+      }
+      if (!token) return;
+
+      setIsLoggedIn(true);
+
       try {
-        const token = typeof window !== "undefined" ? localStorage.getItem("authToken") : null;
-        if (!token) return;
-
-        setIsLoggedIn(true);
-
         const { data } = await axios.get(
           `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/users/profile`,
           { headers: { Authorization: `Bearer ${token}` } }
@@ -132,9 +138,12 @@ const Volunteer = () => {
     e.preventDefault();
     setLoading(true);
 
-    try {
-      const token = typeof window !== "undefined" ? localStorage.getItem("authToken") : null;
+    let token = null;
+    if (typeof window !== "undefined") {
+      token = localStorage.getItem("authToken");
+    }
 
+    try {
       if (isLoggedIn && token) {
         await axios.put(
           `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/users/volunteer`,
@@ -148,10 +157,10 @@ const Volunteer = () => {
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setIsVolunteer(true);
-        showNotification("Thank you for volunteering!", "success");
+        showNotification(t("notifVolunteerSuccess"), "success");
       } else {
         if (!form.password || form.password.length < 6) {
-          showNotification("Password must be at least 6 characters.", "error");
+          showNotification(t("notifPasswordShort"), "error");
           setLoading(false);
           return;
         }
@@ -173,7 +182,7 @@ const Volunteer = () => {
 
         if (typeof window !== "undefined" && data.token) {
           localStorage.setItem("authToken", data.token);
-          showNotification("Thank you for registering!", "success");
+          showNotification(t("notifRegisterSuccess"), "success");
           router.push("/profile");
         }
 
@@ -190,7 +199,7 @@ const Volunteer = () => {
         });
       }
     } catch (err) {
-      showNotification(err.response?.data?.message || "Registration failed", "error");
+      showNotification(err.response?.data?.message || t("notifRegisterFail"), "error");
     }
 
     setLoading(false);
@@ -203,11 +212,11 @@ const Volunteer = () => {
           <div className="volunteer-image">
             <img
               src="https://scontent.fjai6-1.fna.fbcdn.net/v/t1.6435-9/41851338_10216974293654823_3818402281796141056_n.jpg?_nc_cat=108&ccb=1-7&_nc_sid=127cfc&_nc_ohc=NIxd0_BJSY4Q7kNvwHukHj1&_nc_oc=AdkowrgTEEFcoVA6VPOtboTdFK8hkpEAY4WmGfLJjcQBRTSfDTIQr0ZjF8ertzgd6BiieuGMTOZSwtzopByUdv2M&_nc_zt=23&_nc_ht=scontent.fjai6-1.fna&_nc_gid=9M0gAQZGlXDM2bwaQrSWkw&oh=00_AfR7TEgQejd0NDz_u_dUr3Ko_WtjB4re01Fw3AJEg2eCvg&oe=68A04852"
-              alt="Community Volunteers"
+              alt={t("volunteerImgAlt")}
             />
           </div>
           <div className="volunteer-form-container">
-            <h3>Volunteer Registration</h3>
+            <h3>{t("registerTitle")}</h3>
             {isVolunteer ? (
               <div
                 style={{
@@ -222,9 +231,9 @@ const Volunteer = () => {
               >
                 <i className="fas fa-check-circle" style={{ fontSize: "2rem", color: "#388e3c" }}></i>
                 <br />
-                You are registered as a volunteer!<br />
-                Thank you for your support 🌱<br />
-                We will call you according your availability and our social requirement
+                {t("alreadyVolunteer")}<br />
+                {t("thanksSupport")}<br />
+                {t("willContact")}
               </div>
             ) : (
               <form
@@ -238,7 +247,7 @@ const Volunteer = () => {
                     type="text"
                     id="name"
                     name="name"
-                    placeholder="Full Name"
+                    placeholder={t("name")}
                     value={form.name}
                     onChange={handleChange}
                     required
@@ -251,7 +260,7 @@ const Volunteer = () => {
                     type="email"
                     id="email"
                     name="email"
-                    placeholder="Email Address"
+                    placeholder={t("email")}
                     value={form.email}
                     onChange={handleChange}
                     required
@@ -264,7 +273,7 @@ const Volunteer = () => {
                     type="tel"
                     id="phone"
                     name="phone"
-                    placeholder="Phone Number"
+                    placeholder={t("phone")}
                     value={form.phone}
                     onChange={handleChange}
                     required
@@ -278,7 +287,7 @@ const Volunteer = () => {
                       type="password"
                       id="password"
                       name="password"
-                      placeholder="Create Password (min 6 chars)"
+                      placeholder={t("password")}
                       value={form.password}
                       onChange={handleChange}
                       required
@@ -294,7 +303,7 @@ const Volunteer = () => {
                     onChange={handleChange}
                     required
                   >
-                    <option value="">Select Your City</option>
+                    <option value="">{t("selectCity")}</option>
                     {cities.map((c) => (
                       <option key={c.toLowerCase()} value={c}>{c}</option>
                     ))}
@@ -309,9 +318,11 @@ const Volunteer = () => {
                     onChange={handleChange}
                     required
                   >
-                    <option value="">Availability</option>
+                    <option value="">{t("availability")}</option>
                     {availabilities.map((a) => (
-                      <option key={a.value} value={a.value}>{a.label}</option>
+                      <option key={a.value} value={a.value}>
+                        {t(`availabilityOptions.${a.labelKey}`)}
+                      </option>
                     ))}
                   </select>
                   <i className="fas fa-calendar"></i>
@@ -324,7 +335,7 @@ const Volunteer = () => {
                     onChange={handleChange}
                     required
                   >
-                    <option value="">Select Sector</option>
+                    <option value="">{t("selectSector")}</option>
                     {sectors.map((s) => (
                       <option key={s} value={s}>{s}</option>
                     ))}
@@ -339,7 +350,7 @@ const Volunteer = () => {
                     onChange={handleChange}
                     required
                   >
-                    <option value="">Select Profession</option>
+                    <option value="">{t("selectProfession")}</option>
                     {professions.map((p) => (
                       <option key={p} value={p}>{p}</option>
                     ))}
@@ -350,7 +361,7 @@ const Volunteer = () => {
                   <textarea
                     id="motivation"
                     name="motivation"
-                    placeholder="Why do you want to volunteer with us? (Optional)"
+                    placeholder={t("motivation")}
                     rows="4"
                     value={form.motivation}
                     onChange={handleChange}
@@ -364,11 +375,11 @@ const Volunteer = () => {
                 >
                   {loading ? (
                     <>
-                      <i className="fas fa-spinner fa-spin"></i> Registering...
+                      <i className="fas fa-spinner fa-spin"></i> {t("registering")}
                     </>
                   ) : (
                     <>
-                      <i className="fas fa-hands-helping"></i> Register as Volunteer
+                      <i className="fas fa-hands-helping"></i> {t("registerBtn")}
                     </>
                   )}
                 </button>

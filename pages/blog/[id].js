@@ -1,20 +1,35 @@
+"use client";
+
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
+import { useLocale, useTranslations } from "next-intl";
 import axios from "axios";
 import Head from "next/head";
 import Link from "next/link";
 import Image from "next/image";
 
+export async function getServerSideProps({ locale }) {
+  return {
+    props: {
+      messages: require(`../../locales/${locale}.json`),
+      locale,
+    }
+  };
+}
+
 const BlogDetails = () => {
   const router = useRouter();
-  const { id } = router.query;
+  const  slug  = router.query.id;
   const [blog, setBlog] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const locale = useLocale();
+  const t = useTranslations("blog"); // assuming you have Blog namespace in messages
+
   useEffect(() => {
-    if (!id) return;
+    if (!slug) return;
     axios
-      .get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/blogs/${id}`)
+      .get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/blogs/${slug}`)
       .then((res) => {
         setBlog(res.data);
         setLoading(false);
@@ -23,13 +38,17 @@ const BlogDetails = () => {
         setLoading(false);
         router.push("/blog");
       });
-  }, [id, router]);
+  }, [slug, router]);
 
-  if (loading) return <div style={{ padding: 40 }}>Loading blog...</div>;
-  if (!blog) return <div style={{ padding: 40 }}>Blog not found</div>;
+  if (loading) return <div style={{ padding: 40 }}>{t("loading")}</div>;
+  if (!blog) return <div style={{ padding: 40 }}>{t("notFound")}</div>;
 
-  const metaTitle = blog.title ? `${blog.title} | GreenEye Blog` : "Blog Post | GreenEye";
-  const metaDescription = blog.content?.substr(0, 160) || "Read this blog post on GreenEye.";
+  const translation = blog.translations?.[locale] || blog.translations?.en || {};
+  const metaTitle = translation.title
+    ? `${translation.title} | GreenEye Blog`
+    : t("defaultMetaTitle");
+  const metaDescription =
+    translation.content?.substring(0, 160) || t("defaultMetaDescription");
   const metaImage = blog.image || "/default-og-image.jpg";
 
   return (
@@ -64,12 +83,20 @@ const BlogDetails = () => {
           letterSpacing: 0.5,
         }}
       >
-        &larr; Back to Blogs
+        &larr; {t("backToBlogs")}
       </Link>
 
       <header>
-        <h1 style={{ margin: "24px 32px 0 32px", fontSize: "2.5rem", fontWeight: 800, letterSpacing: 1, color: "#222" }}>
-          {blog.title}
+        <h1
+          style={{
+            margin: "24px 32px 0 32px",
+            fontSize: "2.5rem",
+            fontWeight: 800,
+            letterSpacing: 1,
+            color: "#222",
+          }}
+        >
+          {translation.title || t("noTitle")}
         </h1>
       </header>
 
@@ -90,8 +117,8 @@ const BlogDetails = () => {
         >
           <Image
             src={blog.image}
-            alt={blog.title}
-            layout="fill"
+            alt={translation.title || "Blog image"}
+            fill
             objectFit="contain"
             style={{ background: "transparent" }}
             priority
@@ -113,7 +140,7 @@ const BlogDetails = () => {
           overflowWrap: "break-word",
         }}
       >
-        {blog.content}
+        {translation.content || t("noContent")}
       </section>
 
       <footer
@@ -130,7 +157,7 @@ const BlogDetails = () => {
       >
         <span>
           <i className="far fa-calendar-alt" style={{ marginRight: 6 }}></i>
-          {new Date(blog.createdAt).toLocaleDateString()}
+          {new Date(blog.createdAt).toLocaleDateString(locale)}
         </span>
         <span style={{ fontWeight: 600 }}>
           <i className="far fa-user" style={{ marginRight: 6 }}></i>

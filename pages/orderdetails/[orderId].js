@@ -2,8 +2,19 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/router";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
+
+export async function getServerSideProps({ locale }) {
+  return {
+    props: {
+      messages: require(`../../locales/${locale}.json`),
+      locale,
+    }
+  };
+}
 
 const OrderDetails = () => {
+  const t = useTranslations("orderDetails");
   const router = useRouter();
   const { orderId } = router.query;
 
@@ -11,7 +22,7 @@ const OrderDetails = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!orderId) return; // Wait for router to be ready
+    if (!orderId) return;
 
     const token = localStorage.getItem("authToken");
     if (!token) {
@@ -34,7 +45,7 @@ const OrderDetails = () => {
     return (
       <div className="container" style={{ maxWidth: 600, marginTop: 40 }}>
         <div style={{ textAlign: "center", padding: "2rem 0" }}>
-          <i className="fas fa-spinner fa-spin"></i> Loading order details...
+          <i className="fas fa-spinner fa-spin"></i> {t("loading")}
         </div>
       </div>
     );
@@ -43,7 +54,7 @@ const OrderDetails = () => {
   if (!order) {
     return (
       <div className="container" style={{ maxWidth: 600, marginTop: 40 }}>
-        <div style={{ color: "#b62222" }}>Order not found.</div>
+        <div style={{ color: "#b62222" }}>{t("notFound")}</div>
       </div>
     );
   }
@@ -52,46 +63,46 @@ const OrderDetails = () => {
     <div className="container" style={{ maxWidth: 600, marginTop: 40 }}>
       <Link href="/myorders" passHref legacyBehavior>
         <a style={{ color: "#388e3c", textDecoration: "none", marginTop: 20, marginBottom: 18, display: "inline-block" }}>
-          <i className="fas fa-arrow-left"></i> Back to Orders
+          <i className="fas fa-arrow-left"></i> {t("backToOrders")}
         </a>
       </Link>
 
       <div className="auth-card" style={{ padding: 32 }}>
         <h2 style={{ marginBottom: 10 }}>
-          Order #{order._id.slice(-6).toUpperCase()}
+          {t("order")} #{order._id.slice(-6).toUpperCase()}
         </h2>
         <div style={{ color: "#888", fontSize: 14, marginBottom: 16 }}>
-          Placed: {new Date(order.createdAt).toLocaleString()}
+          {t("placed")}: {new Date(order.createdAt).toLocaleString()}
         </div>
         <div>
-          <b>Status: </b>
+          <b>{t("status")}: </b>
           <span
             style={{
               color: order.isDelivered ? "#388e3c" : "#b62222",
               fontWeight: 600,
             }}
           >
-            {order.isDelivered ? "Delivered" : "Pending"}
+            {order.isDelivered ? t("delivered") : t("pending")}
           </span>
         </div>
 
         <div style={{ margin: "18px 0" }}>
-          <b>Shipping Address:</b>
+          <b>{t("shippingAddress")}:</b>
           <div>{order.shippingAddress?.name}</div>
           <div>{order.shippingAddress?.address}</div>
           <div>
             {order.shippingAddress?.city}, {order.shippingAddress?.state}{" "}
             {order.shippingAddress?.pincode}
           </div>
-          <div>Phone: {order.shippingAddress?.phone}</div>
+          <div>{t("phone")}: {order.shippingAddress?.phone}</div>
         </div>
 
         <div>
-          <b>Items:</b>
+          <b>{t("items")}:</b>
           <ul style={{ marginTop: 8 }}>
             {order.orderItems.map((item) => (
               <li key={item._id} style={{ marginBottom: 5 }}>
-                {item.name || "Product"} x {item.quantity}{" "}
+                {item.name || t("product")} x {item.quantity}{" "}
                 <span style={{ color: "#388e3c" }}>
                   ₹{item.price * item.quantity}
                 </span>
@@ -101,14 +112,14 @@ const OrderDetails = () => {
         </div>
 
         <div style={{ marginTop: 18, fontWeight: 600 }}>
-          Total: ₹
+          {t("total")}: ₹
           {order.orderItems.reduce(
             (sum, item) => sum + item.price * item.quantity,
             0
           )}
         </div>
         <div style={{ marginTop: 8 }}>
-          Payment: <b>{order.paymentMethod}</b>
+          {t("payment")}: <b>{order.paymentMethod}</b>
         </div>
       </div>
     </div>

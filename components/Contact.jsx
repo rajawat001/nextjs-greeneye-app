@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { showNotification } from "./Notification";
+import { useTranslations } from "next-intl";
 
-/**
- * Contact section with info and contact form.
- */
 const Contact = () => {
+  const t = useTranslations("contact");
+
   // Form state
   const [form, setForm] = useState({
     firstName: "",
@@ -37,7 +37,7 @@ const Contact = () => {
         subject: "",
         message: "",
       });
-      showNotification("Your message has been sent successfully! We will get back to you soon.", "success");
+      showNotification(t("successMessage", { defaultMessage: "Your message has been sent successfully! We will get back to you soon." }), "success");
     }, 2000);
   };
 
@@ -50,74 +50,44 @@ const Contact = () => {
             <div className="contact-item">
               <div className="contact-icon"><i className="fas fa-map-marker-alt"></i></div>
               <div className="contact-details">
-                <h4>Our Location</h4>
+                <h4>{t("locationTitle")}</h4>
                 <p>
                   Prime, C11, Kanak Vrindavan<br />
                   Jaipur, Rajasthan, Bajiri Mandi-302034<br />
-                  India
+                  {t("country", { defaultMessage: "India" })}
                 </p>
               </div>
             </div>
             <div className="contact-item">
               <div className="contact-icon"><i className="fas fa-phone"></i></div>
               <div className="contact-details">
-                <h4>Phone Number</h4>
+                <h4>{t("phoneTitle")}</h4>
                 <p>7023277322</p>
               </div>
             </div>
             <div className="contact-item">
               <div className="contact-icon"><i className="fas fa-envelope"></i></div>
               <div className="contact-details">
-                <h4>Email Address</h4>
+                <h4>{t("emailTitle")}</h4>
                 <p>contact@greeneye.foundation</p>
               </div>
             </div>
             <div className="social-links">
-              <h4>Follow Us</h4>
+              <h4>{t("followUs")}</h4>
               <div className="social-icons">
-                <a
-                  href="https://facebook.com/"
-                  className="social-icon"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Facebook"
-                >
+                <a href="https://facebook.com/" className="social-icon" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
                   <i className="fab fa-facebook"></i>
                 </a>
-                <a
-                  href="https://twitter.com/"
-                  className="social-icon"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Twitter"
-                >
+                <a href="https://twitter.com/" className="social-icon" target="_blank" rel="noopener noreferrer" aria-label="Twitter">
                   <i className="fab fa-twitter"></i>
                 </a>
-                <a
-                  href="https://instagram.com/"
-                  className="social-icon"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Instagram"
-                >
+                <a href="https://instagram.com/" className="social-icon" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
                   <i className="fab fa-instagram"></i>
                 </a>
-                <a
-                  href="https://linkedin.com/"
-                  className="social-icon"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="LinkedIn"
-                >
+                <a href="https://linkedin.com/" className="social-icon" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
                   <i className="fab fa-linkedin"></i>
                 </a>
-                <a
-                  href="https://youtube.com/"
-                  className="social-icon"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="YouTube"
-                >
+                <a href="https://youtube.com/" className="social-icon" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
                   <i className="fab fa-youtube"></i>
                 </a>
               </div>
@@ -125,7 +95,7 @@ const Contact = () => {
           </div>
           {/* Contact Form */}
           <div className="contact-form-container">
-            <h3>Send us a Message</h3>
+            <h3>{t("formTitle")}</h3>
             <form className="contact-form" id="contactForm" onSubmit={handleSubmit} autoComplete="off">
               <div className="form-row">
                 <div className="form-group">
@@ -133,7 +103,7 @@ const Contact = () => {
                     type="text"
                     id="contactName"
                     name="firstName"
-                    placeholder="First Name"
+                    placeholder={t("firstName")}
                     value={form.firstName}
                     onChange={handleChange}
                     required
@@ -145,7 +115,7 @@ const Contact = () => {
                     type="text"
                     id="lastName"
                     name="lastName"
-                    placeholder="Last Name"
+                    placeholder={t("lastName")}
                     value={form.lastName}
                     onChange={handleChange}
                     required
@@ -158,7 +128,7 @@ const Contact = () => {
                   type="email"
                   id="contactEmail"
                   name="email"
-                  placeholder="Email Address"
+                  placeholder={t("emailAddress")}
                   value={form.email}
                   onChange={handleChange}
                   required
@@ -170,7 +140,7 @@ const Contact = () => {
                   type="tel"
                   id="contactPhone"
                   name="phone"
-                  placeholder="Phone Number"
+                  placeholder={t("phoneNumber")}
                   value={form.phone}
                   onChange={handleChange}
                 />
@@ -184,12 +154,12 @@ const Contact = () => {
                   onChange={handleChange}
                   required
                 >
-                  <option value="">Select Subject</option>
-                  <option value="volunteer">Volunteer Opportunities</option>
-                  <option value="donation">Donation Inquiry</option>
-                  <option value="partnership">Partnership</option>
-                  <option value="general">General Question</option>
-                  <option value="feedback">Feedback</option>
+                  <option value="">{t("selectSubject")}</option>
+                  <option value="volunteer">{t("subjectVolunteer")}</option>
+                  <option value="donation">{t("subjectDonation")}</option>
+                  <option value="partnership">{t("subjectPartnership")}</option>
+                  <option value="general">{t("subjectGeneral")}</option>
+                  <option value="feedback">{t("subjectFeedback")}</option>
                 </select>
                 <i className="fas fa-tag"></i>
               </div>
@@ -197,7 +167,7 @@ const Contact = () => {
                 <textarea
                   id="message"
                   name="message"
-                  placeholder="Your Message"
+                  placeholder={t("yourMessage")}
                   rows="6"
                   value={form.message}
                   onChange={handleChange}
@@ -208,11 +178,11 @@ const Contact = () => {
               <button type="submit" className="btn btn-primary btn-full" disabled={loading}>
                 {loading ? (
                   <>
-                    <i className="fas fa-spinner fa-spin"></i> Sending...
+                    <i className="fas fa-spinner fa-spin"></i> {t("sending")}
                   </>
                 ) : (
                   <>
-                    <i className="fas fa-paper-plane"></i> Send Message
+                    <i className="fas fa-paper-plane"></i> {t("sendMessage")}
                   </>
                 )}
               </button>

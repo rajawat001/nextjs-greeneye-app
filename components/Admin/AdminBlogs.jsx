@@ -1,19 +1,31 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
-const initialForm = { title: "", content: "", image: "", published: true, author: "" };
+const LANGUAGES = ["en", "fr", "hi"]; // supported language codes
+
+const initialForm = {
+  slug: "",
+  image: "",
+  published: true,
+  author: "",
+  translations: {
+    en: { title: "", content: "" },
+    fr: { title: "", content: "" },
+    hi: { title: "", content: "" },
+  }
+};
 
 export default function AdminBlogs() {
   const [blogs, setBlogs] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState(initialForm);
   const [editBlogId, setEditBlogId] = useState(null);
+  const [selectedLang, setSelectedLang] = useState("en");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     fetchBlogs();
-    // eslint-disable-next-line
   }, []);
 
   const fetchBlogs = async () => {
@@ -23,11 +35,19 @@ export default function AdminBlogs() {
     setLoading(false);
   };
 
-  // Open modal in edit or add mode
   const openBlogModal = (blog) => {
     if (blog) {
       setEditBlogId(blog._id);
-      setForm({ ...blog });
+      setForm({
+        slug: blog.slug,
+        image: blog.image,
+        published: blog.published,
+        author: blog.author,
+        translations: {
+          ...initialForm.translations,
+          ...blog.translations
+        }
+      });
     } else {
       setEditBlogId(null);
       setForm(initialForm);
@@ -37,26 +57,40 @@ export default function AdminBlogs() {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setForm((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
+    if (["title", "content"].includes(name)) {
+      setForm((prev) => ({
+        ...prev,
+        translations: {
+          ...prev.translations,
+          [selectedLang]: {
+            ...prev.translations[selectedLang],
+            [name]: value
+          }
+        }
+      }));
+    } else {
+      setForm((prev) => ({
+        ...prev,
+        [name]: type === "checkbox" ? checked : value,
+      }));
+    }
   };
 
   const handleSave = async () => {
     setSaving(true);
     const token = localStorage.getItem("authToken");
     try {
+      const payload = { ...form };
       if (editBlogId) {
         await axios.put(
           `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/blogs/${editBlogId}`,
-          form,
+          payload,
           { headers: { Authorization: `Bearer ${token}` } }
         );
       } else {
         await axios.post(
           `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/blogs`,
-          form,
+          payload,
           { headers: { Authorization: `Bearer ${token}` } }
         );
       }
@@ -94,73 +128,18 @@ export default function AdminBlogs() {
         Add Blog
       </button>
 
-      {/* Modal/Block for Add/Edit */}
       {modalOpen && (
-        <div
-          className="admin-modal-overlay"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            position: "fixed",
-            zIndex: 1000,
-            left: 0,
-            top: 0,
-            width: "100vw",
-            height: "100vh",
-            background: "rgba(0,0,0,0.15)"
-          }}
-        >
-          <div
-            className="admin-modal"
-            style={{
-              background: "#fff",
-              padding: 24,
-              borderRadius: 10,
-              boxShadow: "0 6px 24px rgba(0,0,0,0.1)",
-              maxWidth: 520,
-              width: "95%",
-              position: "relative"
-            }}
-          >
-            <button
-              onClick={() => setModalOpen(false)}
-              style={{
-                position: "absolute",
-                top: 14,
-                right: 18,
-                background: "none",
-                border: "none",
-                fontSize: 22,
-                cursor: "pointer",
-              }}
-              title="Close"
-            >
-              ×
-            </button>
-            <h4 style={{ marginBottom: 12 }}>{editBlogId ? "Edit Blog" : "Add Blog"}</h4>
-            <label>Title</label>
-            <input
-              name="title"
-              value={form.title}
-              onChange={handleChange}
-              style={{ width: "100%", marginBottom: 8 }}
-            />
-            <label>Content</label>
-            <textarea
-              name="content"
-              value={form.content}
-              onChange={handleChange}
-              rows={6}
-              style={{ width: "100%", marginBottom: 8 }}
-            />
+        <div className="admin-modal-overlay">
+          <div className="admin-modal">
+            <button onClick={() => setModalOpen(false)} className="modal-close">×</button>
+            <h4>{editBlogId ? "Edit Blog" : "Add Blog"}</h4>
+
+            <label>Slug</label>
+            <input name="slug" value={form.slug} onChange={handleChange} />
+
             <label>Image URL</label>
-            <input
-              name="image"
-              value={form.image}
-              onChange={handleChange}
-              style={{ width: "100%", marginBottom: 8 }}
-            />
+            <input name="image" value={form.image} onChange={handleChange} />
+
             <label>
               <input
                 type="checkbox"
@@ -170,33 +149,40 @@ export default function AdminBlogs() {
               />
               Published
             </label>
-            <label style={{ display: "block", marginTop: 8 }}>Author</label>
+
+            <label>Author</label>
+            <input name="author" value={form.author} onChange={handleChange} />
+
+            {/* Language Selector */}
+            <label>Language</label>
+            <select value={selectedLang} onChange={(e) => setSelectedLang(e.target.value)}>
+              {LANGUAGES.map((lang) => (
+                <option key={lang} value={lang}>{lang.toUpperCase()}</option>
+              ))}
+            </select>
+
+            {/* Title & Content based on selected language */}
+            <label>Title ({selectedLang})</label>
             <input
-              name="author"
-              value={form.author}
+              name="title"
+              value={form.translations[selectedLang]?.title || ""}
               onChange={handleChange}
-              style={{ width: "100%", marginBottom: 8 }}
             />
+
+            <label>Content ({selectedLang})</label>
+            <textarea
+              name="content"
+              value={form.translations[selectedLang]?.content || ""}
+              onChange={handleChange}
+              rows={5}
+            />
+
             <div style={{ marginTop: 16, display: "flex", gap: 10 }}>
-              <button
-                onClick={handleSave}
-                disabled={saving}
-                style={{ minWidth: 80 }}
-              >
+              <button onClick={handleSave} disabled={saving}>
                 {saving ? "Saving..." : editBlogId ? "Update" : "Create"}
               </button>
               {editBlogId && (
-                <button
-                  onClick={handleDelete}
-                  style={{
-                    background: "#fa5252",
-                    color: "#fff",
-                    border: "none",
-                    minWidth: 80,
-                  }}
-                >
-                  Delete
-                </button>
+                <button onClick={handleDelete} className="delete-btn">Delete</button>
               )}
             </div>
           </div>
@@ -209,7 +195,7 @@ export default function AdminBlogs() {
         <table className="admin-table">
           <thead>
             <tr>
-              <th>Title</th>
+              <th>Slug</th>
               <th>Published</th>
               <th>Date</th>
               <th>Author</th>
@@ -217,14 +203,8 @@ export default function AdminBlogs() {
           </thead>
           <tbody>
             {blogs.map((b) => (
-              <tr
-                key={b._id}
-                style={{ cursor: "pointer" }}
-                onClick={() => openBlogModal(b)}
-                tabIndex={0}
-                title="Click to edit"
-              >
-                <td>{b.title}</td>
+              <tr key={b._id} onClick={() => openBlogModal(b)} style={{ cursor: "pointer" }}>
+                <td>{b.slug}</td>
                 <td>{b.published ? "Yes" : "No"}</td>
                 <td>{new Date(b.createdAt).toLocaleDateString()}</td>
                 <td>{b.author}</td>

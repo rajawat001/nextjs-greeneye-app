@@ -1,43 +1,34 @@
-import Head from 'next/head'
-import Contact from '@/components/Contact'
+import { useTranslations } from 'next-intl';
+import Seo from '@/components/common/Seo';
+import Contact from '@/components/Contact';
+
+export function getStaticProps({ locale }) {
+  return {
+    props: {
+      messages: require(`../locales/${locale}.json`),
+      locale,
+    }
+  }
+}
 
 export default function ContactPage() {
+  const t = useTranslations('contact');
   return (
     <>
-      <Head>
-        <title>Contact Us | GreenEye</title>
-        <meta
-          name="description"
-          content="We're here to answer your questions and welcome your feedback. Reach out to GreenEye for any inquiries or support."
-        />
-        <meta property="og:title" content="Contact Us | GreenEye" />
-        <meta
-          property="og:description"
-          content="We're here to answer your questions and welcome your feedback. Reach out to GreenEye for any inquiries or support."
-        />
-        <meta property="og:type" content="website" />
-
-        {/* Uncomment below once actual URLs are available */}
-        {/*
-        <link rel="canonical" href="https://greeneye.foundation/contact" />
-        <meta property="og:image" content="https://greeneye.foundation/assets/contact-og-image.jpg" />
-        <meta property="og:url" content="https://greeneye.foundation/contact" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:site" content="@greeneyeorg" />
-        <meta name="twitter:title" content="Contact Us | GreenEye" />
-        <meta name="twitter:description" content="We're here to answer your questions and welcome your feedback." />
-        <meta name="twitter:image" content="https://greeneye.foundation/assets/contact-og-image.jpg" />
-        */}
-      </Head>
-
+      <Seo
+        title={t('seoTitle', { defaultMessage: 'Contact Us | GreenEye' })}
+        description={t('seoDescription', { defaultMessage: "We're here to answer your questions and welcome your feedback. Reach out to GreenEye for any inquiries or support." })}
+        ogTitle={t('seoTitle', { defaultMessage: 'Contact Us | GreenEye' })}
+        ogDescription={t('seoDescription', { defaultMessage: "We're here to answer your questions and welcome your feedback. Reach out to GreenEye for any inquiries or support." })}
+        canonical="https://greeneye.foundation/contact"
+      />
       <section className="page-header">
         <div className="container">
-          <h1>Contact Us</h1>
-          <p>We&apos;re here to answer your questions and welcome your feedback.</p>
+          <h1>{t('pageTitle', { defaultMessage: 'Contact Us' })}</h1>
+          <p>{t('pageSubtitle', { defaultMessage: "We're here to answer your questions and welcome your feedback." })}</p>
         </div>
       </section>
-
       <Contact />
     </>
-  )
+  );
 }
