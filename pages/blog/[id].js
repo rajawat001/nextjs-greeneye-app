@@ -4,9 +4,9 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { useLocale, useTranslations } from "next-intl";
 import axios from "axios";
-import Head from "next/head";
 import Link from "next/link";
 import Image from "next/image";
+import Seo from "@/components/common/Seo";
 
 export async function getServerSideProps({ locale }) {
   return {
@@ -19,12 +19,12 @@ export async function getServerSideProps({ locale }) {
 
 const BlogDetails = () => {
   const router = useRouter();
-  const  slug  = router.query.id;
+  const slug = router.query.id;
   const [blog, setBlog] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const locale = useLocale();
-  const t = useTranslations("blog"); // assuming you have Blog namespace in messages
+  const t = useTranslations("blog");
 
   useEffect(() => {
     if (!slug) return;
@@ -43,13 +43,63 @@ const BlogDetails = () => {
   if (loading) return <div style={{ padding: 40 }}>{t("loading")}</div>;
   if (!blog) return <div style={{ padding: 40 }}>{t("notFound")}</div>;
 
-  const translation = blog.translations?.[locale] || blog.translations?.en || {};
-  const metaTitle = translation.title
-    ? `${translation.title} | GreenEye Blog`
-    : t("defaultMetaTitle");
-  const metaDescription =
-    translation.content?.substring(0, 160) || t("defaultMetaDescription");
+  const tr = blog.translations?.[locale] || blog.translations?.en || {};
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://greeneye.foundation";
+  const pagePath = `/blog/${slug}`;
+  const pageUrl = `${baseUrl}${pagePath}`;
+
+  const metaTitle = tr.title ? `${tr.title} | GreenEye Blog` : t("defaultMetaTitle");
+  const metaDescription = (tr.content || "").replace(/\s+/g, " ").slice(0, 160) || t("defaultMetaDescription");
   const metaImage = blog.image || "/default-og-image.jpg";
+
+  // Optional image dimensions/alt 
+  const ogImageWidth = 1200;
+  const ogImageHeight = 630;
+  const ogImageAlt = tr.title || "Blog image";
+
+  // Article dates
+  const published = blog.createdAt ? new Date(blog.createdAt).toISOString() : undefined;
+  const modified = blog.updatedAt ? new Date(blog.updatedAt).toISOString() : published;
+
+  
+  const alternates = [];
+  const supportedLocales = ['en', 'fr', 'es', 'ar', 'zh', 'ja']; 
+  supportedLocales.forEach((loc) => {
+    const tLoc = blog.translations?.[loc] ? loc : "en";
+    alternates.push({
+      hrefLang: loc,
+      href: `${baseUrl}/${loc}/blog/${slug}`,
+    });
+  });
+  alternates.push({ hrefLang: "x-default", href: pageUrl });
+
+  // BlogPosting JSON-LD
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": pageUrl
+    },
+    "headline": tr.title || "GreenEye Blog",
+    "description": metaDescription,
+    "image": metaImage ? [metaImage] : undefined,
+    "author": {
+      "@type": "Person",
+      "name": blog.author || "GreenEye"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "GreenEye",
+      "logo": {
+        "@type": "ImageObject",
+        "url": `${baseUrl}/assets/GreenLandscape.png`
+      }
+    },
+    "datePublished": published,
+    "dateModified": modified,
+    "inLanguage": locale || "en"
+  };
 
   return (
     <article
@@ -63,13 +113,31 @@ const BlogDetails = () => {
         overflow: "hidden",
       }}
     >
-      <Head>
-        <title>{metaTitle}</title>
-        <meta name="description" content={metaDescription} />
-        <meta property="og:title" content={metaTitle} />
-        <meta property="og:description" content={metaDescription} />
-        <meta property="og:image" content={metaImage} />
-      </Head>
+      {/* CENTRALIZED SEO */}
+      <Seo
+        title={metaTitle}
+        description={metaDescription}
+        ogTitle={metaTitle}
+        ogDescription={metaDescription}
+        ogType="article"
+        ogImage={metaImage}
+        ogImageWidth={ogImageWidth}
+        ogImageHeight={ogImageHeight}
+        ogImageAlt={ogImageAlt}
+        ogUrl={pageUrl}
+        siteName="GreenEye"
+        locale={locale === "hi" ? "hi_IN" : "en_US"}
+        canonical={pageUrl}
+        twitterCard="summary_large_image"
+        articlePublishedTime={published}
+        articleModifiedTime={modified}
+        articleAuthorUrl="https://greeneye.foundation/about" // author page/FB profile
+        articleSection={blog.category || "Environment"}
+        articleTags={blog.tags || []}
+        alternates={alternates}
+        structuredData={structuredData}
+        noindex={false}
+      />
 
       <Link
         href="/blog"
@@ -96,7 +164,7 @@ const BlogDetails = () => {
             color: "#222",
           }}
         >
-          {translation.title || t("noTitle")}
+          {tr.title || t("noTitle")}
         </h1>
       </header>
 
@@ -117,10 +185,9 @@ const BlogDetails = () => {
         >
           <Image
             src={blog.image}
-            alt={translation.title || "Blog image"}
+            alt={tr.title || "Blog image"}
             fill
-            objectFit="contain"
-            style={{ background: "transparent" }}
+            style={{ objectFit: "contain", background: "transparent" }}
             priority
           />
         </div>
@@ -140,7 +207,7 @@ const BlogDetails = () => {
           overflowWrap: "break-word",
         }}
       >
-        {translation.content || t("noContent")}
+        {tr.content || t("noContent")}
       </section>
 
       <footer

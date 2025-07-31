@@ -467,5 +467,25 @@
     "invalidPhone": "请输入有效的电话号码。",
     "registerSuccess": "账户创建成功。",
     "registerFail": "注册失败，请重试。"
-  }
+  },
+  "plant":{
+  "loading": "加载中...",
+  "notFound": "未找到植物。",
+  "defaultDescription": "植物的详细信息和规格",
+  "backToShop": "返回植物商店",
+  "inStock": "有库存",
+  "outOfStock": "缺货",
+  "noDescription": "暂无描述。",
+  "sku": "库存单位",
+  "category": "类别",
+  "brand": "品牌",
+  "availableCountries": "可用国家",
+  "defaultCategory": "植物",
+  "addToCart": "加入购物车",
+  "viewCart": "查看购物车",
+  "addedToCart": "已加入购物车",
+  "pleaseLogin": "请先登录。",
+  "addFailed": "添加到购物车失败。"
+}
+
 }

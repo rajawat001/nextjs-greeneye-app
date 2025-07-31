@@ -28,6 +28,30 @@ export default function AdminBlogs() {
     fetchBlogs();
   }, []);
 
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (data.imageUrl) {
+        setForm((prev) => ({ ...prev, image: data.imageUrl }));
+      }
+    } catch (err) {
+      console.error("Image upload failed:", err);
+      alert("Image upload failed");
+    }
+  };
+
+
   const fetchBlogs = async () => {
     setLoading(true);
     const res = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/blogs`);
@@ -137,8 +161,16 @@ export default function AdminBlogs() {
             <label>Slug</label>
             <input name="slug" value={form.slug} onChange={handleChange} />
 
-            <label>Image URL</label>
-            <input name="image" value={form.image} onChange={handleChange} />
+            <label>Upload Image</label>
+            <input type="file" accept="image/*" onChange={handleImageUpload} />
+
+            {form.image && (
+              <div style={{ marginTop: 8 }}>
+                <strong>Preview:</strong>
+                <br />
+                <img src={form.image} alt="Uploaded preview" style={{ maxWidth: "200px", marginTop: 5 }} />
+              </div>
+            )}
 
             <label>
               <input

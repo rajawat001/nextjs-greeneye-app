@@ -10,6 +10,29 @@ export default function AdminProduct() {
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState("");
 
+    const handleImageUpload = async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      const formData = new FormData();
+      formData.append("file", file);
+
+      try {
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        const data = await res.json();
+        if (data.imageUrl) {
+          setEdit({ ...edit, image: data.imageUrl }); // Save the URL
+        }
+      } catch (err) {
+        console.error("Image upload failed:", err);
+      }
+    };
+
+
   useEffect(() => {
     fetchPlants();
     // eslint-disable-next-line
@@ -133,10 +156,10 @@ export default function AdminProduct() {
 
   return (
     <div>
-      <h2 style={{marginBottom: "1.5rem"}}>Products</h2>
+      <h2 style={{ marginBottom: "1.5rem" }}>Products</h2>
       <button
         className="admin-save-btn"
-        style={{marginBottom: 18}}
+        style={{ marginBottom: 18 }}
         onClick={openNew}
       >
         + New Product
@@ -168,8 +191,8 @@ export default function AdminProduct() {
                 <td>{plant.category}</td>
                 <td>
                   {plant.isFeatured
-                    ? <span style={{color:"#388e3c",fontWeight:600}}>Yes</span>
-                    : <span style={{color:"#b62222",fontWeight:600}}>No</span>
+                    ? <span style={{ color: "#388e3c", fontWeight: 600 }}>Yes</span>
+                    : <span style={{ color: "#b62222", fontWeight: 600 }}>No</span>
                   }
                 </td>
                 <td>
@@ -188,23 +211,27 @@ export default function AdminProduct() {
         <div className="admin-modal-overlay" onClick={closeModal}>
           <div className="admin-modal" onClick={e => e.stopPropagation()}>
             <button className="admin-modal-close" onClick={closeModal}>&times;</button>
-            <h3 style={{fontWeight:600,marginBottom:16}}>{isNew ? "Add New Product" : "Edit Product"}</h3>
-            <div style={{marginBottom:18}}>
-              <label>Image URL</label>
+            <h3 style={{ fontWeight: 600, marginBottom: 16 }}>{isNew ? "Add New Product" : "Edit Product"}</h3>
+            <div style={{ marginBottom: 18 }}>
+              <label>Upload Image</label>
               <input
-                name="image"
-                value={edit.image}
-                onChange={handleChange}
-                className="admin-input"
-                style={{ width: "100%" }}
-                placeholder="e.g. aloe-vera.jpg"
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
               />
               {edit.image && (
                 <img
                   src={edit.image}
                   alt="product"
-                  style={{width: "60px", height: "60px", objectFit: "cover", margin: "10px 0", borderRadius: 8, border: "1px solid #eee"}}
-                  onError={e => (e.target.style.display='none')}
+                  style={{
+                    width: "60px",
+                    height: "60px",
+                    objectFit: "cover",
+                    margin: "10px 0",
+                    borderRadius: 8,
+                    border: "1px solid #eee"
+                  }}
+                  onError={(e) => (e.target.style.display = "none")}
                 />
               )}
               <label>Name</label>
@@ -258,17 +285,17 @@ export default function AdminProduct() {
                 <option value="Other">Other</option>
                 <option value="Tree">Tree</option>
               </select>
-              <label style={{marginTop:10}}>
+              <label style={{ marginTop: 10 }}>
                 <input
                   name="isFeatured"
                   type="checkbox"
                   checked={edit.isFeatured}
                   onChange={handleChange}
-                  style={{marginRight: 8}}
+                  style={{ marginRight: 8 }}
                 />
                 Featured
               </label>
-              <label style={{marginTop:10}}>Countries (comma separated, e.g. IN, US, GB):</label>
+              <label style={{ marginTop: 10 }}>Countries (comma separated, e.g. IN, US, GB):</label>
               <input
                 name="country"
                 value={edit.country}
@@ -284,14 +311,14 @@ export default function AdminProduct() {
             {!isNew && (
               <button
                 className="admin-save-btn delete"
-                style={{marginLeft: 10}}
+                style={{ marginLeft: 10 }}
                 disabled={saving}
                 onClick={handleDelete}
               >
                 {saving ? "Deleting..." : "Delete"}
               </button>
             )}
-            <div style={{minHeight:28, marginTop:8, color:saveMsg.includes("Failed") ? "#b62222" : "#388e3c", fontWeight:500}}>
+            <div style={{ minHeight: 28, marginTop: 8, color: saveMsg.includes("Failed") ? "#b62222" : "#388e3c", fontWeight: 500 }}>
               {saveMsg}
             </div>
           </div>

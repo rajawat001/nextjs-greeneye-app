@@ -1,17 +1,12 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import Link from "next/link";
 import { useRouter } from "next/router";
 import { useTranslations } from "next-intl";
+import useCart from "@/components/cart/useCart";
+import CartDrawer from "@/components/cart/CartDrawer";
 
-const formatPrice = (price) => `₹${price.toLocaleString()}`;
-
-// Helper to fetch token only on client
-const getToken = () => {
-  if (typeof window !== "undefined") {
-    return localStorage.getItem("authToken");
-  }
-  return null;
-};
+const formatPrice = (price = 0) => `₹${Number(price).toLocaleString()}`;
 
 const PlantShop = () => {
   const t = useTranslations("plantshop");
@@ -19,11 +14,21 @@ const PlantShop = () => {
   const [filteredPlants, setFilteredPlants] = useState([]);
   const [search, setSearch] = useState("");
   const [priceRange, setPriceRange] = useState([0, 10000]);
-  const [cart, setCart] = useState({ items: [] });
-  const [showCart, setShowCart] = useState(false);
   const [userCountry, setUserCountry] = useState(null);
   const [countryFiltered, setCountryFiltered] = useState([]);
   const router = useRouter();
+
+  // Reusable Cart (shared with details page)
+  const {
+    cart,
+    cartCount,
+    total,
+    open,
+    setOpen,
+    addToCart,
+    removeFromCart,
+    changeQty,
+  } = useCart();
 
   // Fetch plants
   useEffect(() => {
@@ -34,7 +39,7 @@ const PlantShop = () => {
         setPlants(arr);
         setFilteredPlants(arr);
         if (arr.length) {
-          const prices = arr.map((p) => p.price);
+          const prices = arr.map((p) => Number(p.price || 0));
           setPriceRange([Math.min(...prices), Math.max(...prices)]);
         }
       })
@@ -42,23 +47,6 @@ const PlantShop = () => {
         setPlants([]);
         setFilteredPlants([]);
       });
-  }, []);
-
-  // Fetch cart (client-side only)
-  useEffect(() => {
-    const fetchCart = async () => {
-      const token = getToken();
-      if (!token) return setCart({ items: [] });
-      try {
-        const res = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setCart(res.data);
-      } catch {
-        setCart({ items: [] });
-      }
-    };
-    fetchCart();
   }, []);
 
   // Fetch user's country (client-side only)
@@ -89,75 +77,18 @@ const PlantShop = () => {
   useEffect(() => {
     setFilteredPlants(
       countryFiltered.filter((plant) => {
-        const matchesName = plant.name.toLowerCase().includes(search.toLowerCase());
-        const matchesPrice = plant.price >= priceRange[0] && plant.price <= priceRange[1];
+        const matchesName = (plant.name || "")
+          .toLowerCase()
+          .includes(search.toLowerCase());
+        const price = Number(plant.price || 0);
+        const matchesPrice = price >= priceRange[0] && price <= priceRange[1];
         return matchesName && matchesPrice;
       })
     );
   }, [search, priceRange, countryFiltered]);
 
-  // Cart actions (client-side only)
-  const addToCart = async (plant) => {
-    const token = getToken();
-    if (!token) return alert(t("loginFirst"));
-    try {
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart`,
-        { plantId: plant._id, quantity: 1 },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      const res = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setCart(res.data);
-      alert(t("addedToCart"));
-    } catch (e) {
-      alert(e.response?.data?.message || t("addCartFail"));
-    }
-  };
-
-  const removeFromCart = async (plantId) => {
-    const token = getToken();
-    if (!token) return;
-    try {
-      await axios.delete(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/${plantId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const res = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setCart(res.data);
-      alert(t("removedFromCart"));
-    } catch (e) {
-      alert(e.response?.data?.message || t("removeCartFail"));
-    }
-  };
-
-  const changeQty = async (plantId, delta) => {
-    const token = getToken();
-    if (!token) return;
-    try {
-      const item = cart.items.find((i) => i._id === plantId);
-      if (!item) return;
-      const newQty = item.quantity + delta;
-      if (newQty < 1) return;
-      await axios.put(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/${plantId}`,
-        { quantity: newQty },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      const res = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setCart(res.data);
-    } catch (e) {
-      alert(e.response?.data?.message || t("updateCartFail"));
-    }
-  };
-
-  const minPrice = Math.min(...plants.map((p) => p.price), 0);
-  const maxPrice = Math.max(...plants.map((p) => p.price), 10000);
-  const cartCount = cart.items?.reduce((sum, item) => sum + item.quantity, 0);
+  const minPrice = Math.min(...plants.map((p) => Number(p.price || 0)), 0);
+  const maxPrice = Math.max(...plants.map((p) => Number(p.price || 0)), 10000);
 
   return (
     <div className="container" style={{ padding: "40px 10px", maxWidth: 1200 }}>
@@ -207,10 +138,15 @@ const PlantShop = () => {
             }
             style={{ width: 110 }}
           />
-          <span style={{ marginLeft: 8, fontWeight: 600 }}>{formatPrice(priceRange[0])}</span>
+          <span style={{ marginLeft: 8, fontWeight: 600 }}>
+            {formatPrice(priceRange[0])}
+          </span>
           <span style={{ margin: "0 6px" }}>-</span>
-          <span style={{ fontWeight: 600 }}>{formatPrice(priceRange[1])}</span>
+          <span style={{ fontWeight: 600 }}>
+            {formatPrice(priceRange[1])}
+          </span>
         </div>
+
         <button
           className="btn btn-cart"
           style={{
@@ -224,7 +160,7 @@ const PlantShop = () => {
             fontSize: 16,
             position: "relative",
           }}
-          onClick={() => setShowCart((v) => !v)}
+          onClick={() => setOpen((v) => !v)}
         >
           <i className="fas fa-shopping-cart"></i> {t("viewCart")}
           {cartCount > 0 && (
@@ -268,16 +204,19 @@ const PlantShop = () => {
             {t("noService")}
           </p>
         )}
-        {userCountry && countryFiltered.length > 0 && filteredPlants.length === 0 && (
-          <p style={{ fontStyle: "italic", opacity: 0.6 }}>
-            {t("noPlantsFound")}
-          </p>
-        )}
+        {userCountry &&
+          countryFiltered.length > 0 &&
+          filteredPlants.length === 0 && (
+            <p style={{ fontStyle: "italic", opacity: 0.6 }}>
+              {t("noPlantsFound")}
+            </p>
+          )}
         {filteredPlants.length === 0 && (
           <p style={{ fontStyle: "italic", opacity: 0.6 }}>
             {t("noPlantsFound")}
           </p>
         )}
+
         {filteredPlants.map((plant) => (
           <div
             key={plant._id}
@@ -295,31 +234,55 @@ const PlantShop = () => {
               position: "relative",
             }}
           >
-            <div
+            {/* Click image or title to go to details page by ID */}
+            <Link
+              href={`/plants/${encodeURIComponent(plant._id)}`}
+              style={{ textDecoration: "none", color: "inherit", width: "100%" }}
+            >
+              <div
+                style={{
+                  width: 120,
+                  height: 120,
+                  margin: "0 auto 16px",
+                  background: "#f4f7f3",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  overflow: "hidden",
+                }}
+              >
+                {plant.image ? (
+                  <img
+                    src={plant.image}
+                    alt={plant.name}
+                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  />
+                ) : (
+                  <i
+                    className="fas fa-seedling"
+                    style={{ fontSize: 60, color: "#b6ccb9" }}
+                  ></i>
+                )}
+              </div>
+              <h3
+                style={{
+                  margin: "8px 0 4px",
+                  textAlign: "center",
+                  cursor: "pointer",
+                }}
+              >
+                {plant.name}
+              </h3>
+            </Link>
+
+            <p
               style={{
-                width: 120,
-                height: 120,
-                marginBottom: 16,
-                background: "#f4f7f3",
-                borderRadius: "50%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                overflow: "hidden",
+                fontSize: 15,
+                color: "#388e3c",
+                fontWeight: 600,
+                marginBottom: 7,
               }}
             >
-              {plant.imageUrl ? (
-                <img
-                  src={plant.imageUrl}
-                  alt={plant.name}
-                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                />
-              ) : (
-                <i className="fas fa-seedling" style={{ fontSize: 60, color: "#b6ccb9" }}></i>
-              )}
-            </div>
-            <h3 style={{ margin: "8px 0 4px" }}>{plant.name}</h3>
-            <p style={{ fontSize: 15, color: "#388e3c", fontWeight: 600, marginBottom: 7 }}>
               {formatPrice(plant.price)}
             </p>
             <p
@@ -333,8 +296,17 @@ const PlantShop = () => {
             >
               {plant.description || t("noDescription")}
             </p>
+
             <button
-              onClick={() => addToCart(plant)}
+              onClick={async () => {
+                try {
+                  await addToCart(plant);
+                  alert(t("addedToCart"));
+                } catch (e) {
+                  if (e?.message === "LOGIN_REQUIRED") alert(t("loginFirst"));
+                  else alert(e?.response?.data?.message || t("addCartFail"));
+                }
+              }}
               style={{
                 background: "#4caf50",
                 color: "#fff",
@@ -352,148 +324,16 @@ const PlantShop = () => {
         ))}
       </div>
 
-      {showCart && (
-        <div
-          style={{
-            position: "fixed",
-            top: 40,
-            right: 0,
-            width: "340px",
-            height: "100vh",
-            background: "#fff",
-            borderLeft: "2px solid #b6ccb9",
-            boxShadow: "-3px 0 15px rgba(56,142,60,0.09)",
-            zIndex: 30,
-            overflowY: "auto",
-            padding: "28px 22px 12px 22px",
-            display: "flex",
-            flexDirection: "column",
-          }}
-        >
-          <button
-            onClick={() => setShowCart(false)}
-            style={{
-              position: "absolute",
-              top: 50,
-              right: 12,
-              background: "none",
-              border: "none",
-              fontSize: 21,
-              color: "#388e3c",
-              cursor: "pointer",
-            }}
-            title={t("close")}
-          >
-            ×
-          </button>
-          <h3 style={{marginTop:20, marginBottom: 18 }}>
-            <i className="fas fa-shopping-cart"></i> {t("yourCart")}
-          </h3>
-          {!cart.items || cart.items.length === 0 ? (
-            <div style={{ textAlign: "center", marginTop: 40 }}>
-              <i className="fas fa-seedling" style={{ fontSize: 38, color: "#b6ccb9" }}></i>
-              <p style={{ color: "#888" }}>{t("cartEmpty")}</p>
-            </div>
-          ) : (
-            <div>
-              {cart.items.map((item) => (
-                <div
-                  key={item._id}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    marginBottom: 12,
-                    borderBottom: "1px solid #eee",
-                    paddingBottom: 8,
-                  }}
-                >
-                  <div style={{ flex: 1 }}>
-                    <b>{item.plant.name}</b>
-                    <div style={{ fontSize: 13, color: "#388e3c" }}>
-                      {formatPrice(item.plant.price)} x {item.quantity}
-                      <span style={{ fontWeight: 600, marginLeft: 8 }}>
-                        = {formatPrice(item.plant.price * item.quantity)}
-                      </span>
-                    </div>
-                  </div>
-                  <div>
-                    <button
-                      onClick={() => changeQty(item._id, -1)}
-                      style={{
-                        background: "#eee",
-                        border: "none",
-                        borderRadius: 3,
-                        width: 25,
-                        height: 25,
-                        fontSize: 18,
-                        marginRight: 3,
-                        cursor: "pointer",
-                      }}
-                    >
-                      -
-                    </button>
-                    <button
-                      onClick={() => changeQty(item._id, 1)}
-                      style={{
-                        background: "#eee",
-                        border: "none",
-                        borderRadius: 3,
-                        width: 25,
-                        height: 25,
-                        fontSize: 18,
-                        marginRight: 8,
-                        cursor: "pointer",
-                      }}
-                    >
-                      +
-                    </button>
-                    <button
-                      onClick={() => removeFromCart(item._id)}
-                      style={{
-                        background: "none",
-                        border: "none",
-                        color: "#b62222",
-                        fontSize: 17,
-                        cursor: "pointer",
-                      }}
-                      title={t("removeFromCart")}
-                    >
-                      <i className="fas fa-trash"></i>
-                    </button>
-                  </div>
-                </div>
-              ))}
-              <div style={{ borderTop: "1px solid #b6ccb9", margin: "18px 0" }}></div>
-              <div style={{ textAlign: "right", fontWeight: 600, fontSize: 17, color: "#388e3c" }}>
-                {t("total")}:{" "}
-                {formatPrice(
-                  cart.items.reduce((sum, item) => sum + item.plant.price * item.quantity, 0)
-                )}
-              </div>
-              <button
-                onClick={() => {
-                  setShowCart(false);
-                  router.push("/checkout");
-                }}
-                style={{
-                  background: "#388e3c",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: 6,
-                  padding: "10px 28px",
-                  fontWeight: 600,
-                  fontSize: 16,
-                  marginTop: 22,
-                  cursor: "pointer",
-                  width: "100%",
-                }}
-              >
-                <i className="fas fa-credit-card"></i> {t("checkout")}
-              </button>
-            </div>
-          )}
-        </div>
-      )}
+      {/* Reusable Cart Drawer */}
+      <CartDrawer
+        open={open}
+        onClose={() => setOpen(false)}
+        cart={cart}
+        changeQty={changeQty}
+        removeFromCart={removeFromCart}
+        total={total}
+        t={t}
+      />
     </div>
   );
 };

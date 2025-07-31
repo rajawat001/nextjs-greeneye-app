@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useRouter } from "next/router";
 import { useTranslations } from "next-intl";
+import Link from "next/link";
 
 const Checkout = () => {
   const t = useTranslations("checkout");
@@ -198,6 +199,12 @@ const Checkout = () => {
       borderRadius: 12,
       boxShadow: "0 2px 16px #e0e0e0"
     }}>
+    <Link
+        href="/plantshop"
+        style={{ color: "#388e3c", textDecoration: "none", fontWeight: 600 }}
+      >
+        ← Back to Plant Shop
+      </Link>
       <h2 style={{ marginBottom: 22 }}>{t("checkoutTitle")}</h2>
       <form onSubmit={handlePlaceOrder} autoComplete="off">
         {[

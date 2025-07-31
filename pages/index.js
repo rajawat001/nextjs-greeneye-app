@@ -29,6 +29,7 @@ export default function HomePage() {
         ogTitle={t('title')}
         ogDescription={t('cta')}
         ogType="website"
+        ogImage='assets/GreeneyeLandscape.png'
       />
       <Hero />
       <About />

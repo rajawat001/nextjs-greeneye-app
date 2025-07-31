@@ -471,5 +471,24 @@
     "invalidPhone": "Please enter a valid phone number.",
     "registerSuccess": "Account created successfully.",
     "registerFail": "Registration failed. Please try again."
-  }
+  },
+  "plant":{
+  "loading": "Loading...",
+  "notFound": "Plant not found.",
+  "defaultDescription": "Plant details and specifications",
+  "backToShop": "Back to Plant Shop",
+  "inStock": "In stock",
+  "outOfStock": "Out of stock",
+  "noDescription": "No description available.",
+  "sku": "SKU",
+  "category": "Category",
+  "brand": "Brand",
+  "availableCountries": "Available Countries",
+  "defaultCategory": "Plants",
+  "addToCart": "Add to Cart",
+  "viewCart": "View Cart",
+  "addedToCart": "Added to cart",
+  "pleaseLogin": "Please login first.",
+  "addFailed": "Failed to add to cart."
+}
 }

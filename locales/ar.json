@@ -467,5 +467,25 @@
     "invalidPhone": "يرجى إدخال رقم هاتف صالح.",
     "registerSuccess": "تم إنشاء الحساب بنجاح.",
     "registerFail": "فشل التسجيل. الرجاء المحاولة مرة أخرى."
-  }
+  },
+  "plant":{
+  "loading": "جار التحميل...",
+  "notFound": "النبتة غير موجودة.",
+  "defaultDescription": "تفاصيل ومواصفات النبتة",
+  "backToShop": "العودة إلى متجر النباتات",
+  "inStock": "متوفر",
+  "outOfStock": "غير متوفر",
+  "noDescription": "لا يوجد وصف متاح.",
+  "sku": "رمز المنتج",
+  "category": "الفئة",
+  "brand": "العلامة التجارية",
+  "availableCountries": "الدول المتاحة",
+  "defaultCategory": "نباتات",
+  "addToCart": "أضف إلى السلة",
+  "viewCart": "عرض السلة",
+  "addedToCart": "تمت الإضافة إلى السلة",
+  "pleaseLogin": "يرجى تسجيل الدخول أولاً.",
+  "addFailed": "فشل في الإضافة إلى السلة."
+}
+
 }

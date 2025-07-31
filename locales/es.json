@@ -467,5 +467,25 @@
     "invalidPhone": "Por favor ingresa un número de teléfono válido.",
     "registerSuccess": "Cuenta creada con éxito.",
     "registerFail": "Error en el registro. Por favor inténtalo de nuevo."
-  }
+  },
+  "plant":{
+  "loading": "Cargando...",
+  "notFound": "Planta no encontrada.",
+  "defaultDescription": "Detalles y especificaciones de la planta",
+  "backToShop": "Volver a la tienda de plantas",
+  "inStock": "En stock",
+  "outOfStock": "Agotado",
+  "noDescription": "No hay descripción disponible.",
+  "sku": "SKU",
+  "category": "Categoría",
+  "brand": "Marca",
+  "availableCountries": "Países disponibles",
+  "defaultCategory": "Plantas",
+  "addToCart": "Agregar al carrito",
+  "viewCart": "Ver carrito",
+  "addedToCart": "Agregado al carrito",
+  "pleaseLogin": "Por favor inicie sesión primero.",
+  "addFailed": "Error al agregar al carrito."
+}
+
 }
