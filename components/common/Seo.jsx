@@ -1,6 +1,8 @@
 // components/common/Seo.jsx
 import Head from "next/head";
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "";
+
 export default function Seo({
   title,
   description,
@@ -38,6 +40,12 @@ export default function Seo({
 }) {
   const safeTitle = ogTitle || title;
 
+
+  // Ensure ogImage is absolute
+  const resolvedOgImage = ogImage?.startsWith("https")
+    ? ogImage
+    : `${SITE_URL}${ogImage}`;
+
   return (
     <Head>
       {/* Basic */}
@@ -62,8 +70,8 @@ export default function Seo({
       <meta property="og:type" content={ogType} />
       {safeTitle && <meta property="og:title" content={safeTitle} />}
       {ogDescription && <meta property="og:description" content={ogDescription} />}
-      {ogImage && <meta property="og:image" content={ogImage} />}
-      {ogImage && <meta property="og:image:secure_url" content={ogImage} />}
+      {ogImage && <meta property="og:image" content={resolvedOgImage} />}
+      {ogImage && <meta property="og:image:secure_url" content={resolvedOgImage} />}
       {ogImageWidth && <meta property="og:image:width" content={String(ogImageWidth)} />}
       {ogImageHeight && <meta property="og:image:height" content={String(ogImageHeight)} />}
       {ogImageAlt && <meta property="og:image:alt" content={ogImageAlt} />}
@@ -93,7 +101,7 @@ export default function Seo({
       <meta name="twitter:card" content={twitterCard} />
       {safeTitle && <meta name="twitter:title" content={safeTitle} />}
       {ogDescription && <meta name="twitter:description" content={ogDescription} />}
-      {ogImage && <meta name="twitter:image" content={ogImage} />}
+      {ogImage && <meta name="twitter:image" content={resolvedOgImage} />}
       {twitterSite && <meta name="twitter:site" content={twitterSite} />}
       {twitterCreator && <meta name="twitter:creator" content={twitterCreator} />}
 

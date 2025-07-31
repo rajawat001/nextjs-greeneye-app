@@ -1,42 +1,25 @@
 // pages/_document.js
 import { Html, Head, Main, NextScript } from 'next/document';
 
-export default function Document(props) {
-  const locale = props.__NEXT_DATA__?.locale || 'en';
+export default function Document({ __NEXT_DATA__ }) {
+  const locale = __NEXT_DATA__?.locale || 'en';
 
   return (
     <Html lang={locale}>
       <Head>
         {/* Favicon */}
         <link rel="icon" href="/GreenEyeLogo.ico" />
-        
-        {/* Font Awesome CSS */}
+
+        {/* Font Awesome */}
         <link
           rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
           crossOrigin="anonymous"
           referrerPolicy="no-referrer"
         />
-        {/* Open Graph */}
-        <meta property="og:type" content="website" />
-        <meta property="og:site_name" content="GreenEye Foundation" />
-        <meta property="og:title" content="GreenEye - For a Greener Future" />
-        <meta property="og:description" content="Join GreenEye in making the world greener and cleaner!" />
-        <meta property="og:image" content="/assets/GreenLandscape.png" />
-        <meta property="og:url" content="https://greeneye.foundation" />
 
-        {/* Twitter Card */}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="GreenEye - Eco Foundation" />
-        <meta name="twitter:description" content="Support our mission to protect the planet!" />
-        <meta name="twitter:image" content="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSS5TiHD4i2ifm-zhqkKikFOFdiipUvByJZiA&s" />
-
-        {/* Canonical */}
-        <link rel="canonical" href="https://greeneye.foundation" />
-
-        {/* Meta Tags */}
+        {/* Theme */}
         <meta name="theme-color" content="#000000" />
-        <meta name="description" content="Web site created using Next.js" />
       </Head>
       <body>
         <Main />
