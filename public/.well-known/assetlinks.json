@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.anonymous.greeneyenative",
+      "sha256_cert_fingerprints": [
+        "41:15:CC:B6:06:B8:60:99:9B:D5:C1:E7:D8:ED:EE:68:F8:3D:B0:F0:D6:59:D8:CF:84:E7:91:8B:3C:4E:56:3B"
+      ]
+    }
+  }
+]
