@@ -22,6 +22,8 @@ const Register = ({ onSwitch }) => {
   const [showPwd, setShowPwd] = useState(false);
   const [showConfirmPwd, setShowConfirmPwd] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
+  const [otp, setOtp] = useState("");
   const router = useRouter();
 
   const isEmailValid = (email) =>
@@ -48,45 +50,60 @@ const Register = ({ onSwitch }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!isPasswordMatch) {
-      showNotification(t("pwdNoMatch"), "error");
-      return;
-    }
-
-    if (!isPasswordStrong(form.password)) {
-      showNotification(t("pwdWeak"), "error");
-      return;
-    }
-
-    if (!form.agreeTerms) {
-      showNotification(t("agreeTermsMsg"), "error");
-      return;
-    }
-
-    if (!isEmailValid(form.email)) {
-      showNotification(t("invalidEmail"), "error");
-      return;
-    }
-
-    if (!isPhoneValid(form.phone)) {
-      showNotification(t("invalidPhone"), "error");
-      return;
-    }
+    if (!isPasswordMatch) return showNotification(t("pwdNoMatch"), "error");
+    if (!isPasswordStrong(form.password)) return showNotification(t("pwdWeak"), "error");
+    if (!form.agreeTerms) return showNotification(t("agreeTermsMsg"), "error");
+    if (!isEmailValid(form.email)) return showNotification(t("invalidEmail"), "error");
+    if (!isPhoneValid(form.phone)) return showNotification(t("invalidPhone"), "error");
 
     setLoading(true);
-
-    const payload = {
-      name: `${form.firstName} ${form.lastName}`.trim(),
-      email: form.email,
-      password: form.password,
-      phone: form.phone,
-    };
-
     try {
-      const { data } = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/users/register`,
-        payload
-      );
+      const phone = form.phone.startsWith("+") ? form.phone : `+91${form.phone}`;
+
+      await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/otp/send`, {
+        phone,
+        email: form.email,
+      });
+
+      showNotification("OTP sent to your SMS", "success");
+      setOtpSent(true);
+    } catch (err) {
+      const msg = err.response?.data?.message;
+      const field = err.response?.data?.field;
+
+      if (field === "email") {
+        showNotification("This email is already registered. Please login instead.", "error");
+        router.push("/login");
+        return;
+      }
+
+      if (field === "phone") {
+        showNotification("This phone number is already registered. Please login instead.", "error");
+        router.push("/login");
+        return;
+      }
+
+      showNotification(msg || "Failed to send OTP", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleOTPVerification = async (e) => {
+    e.preventDefault();
+    if (!otp) return showNotification("Please enter OTP", "error");
+
+    setLoading(true);
+    try {
+      const payload = {
+        name: `${form.firstName} ${form.lastName}`.trim(),
+        email: form.email,
+        password: form.password,
+        phone: form.phone,
+        otp: otp,
+      };
+
+      const { data } = await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/otp/verify`, payload);
 
       if (data.token) {
         localStorage.setItem("authToken", data.token);
@@ -107,10 +124,7 @@ const Register = ({ onSwitch }) => {
 
       if (onSwitch) setTimeout(() => onSwitch(), 1000);
     } catch (error) {
-      const errorMsg =
-        error.response?.data?.message ||
-        error.response?.data?.error ||
-        t("registerFail");
+      const errorMsg = error.response?.data?.message || error.response?.data?.error || t("registerFail");
       showNotification(errorMsg, "error");
     } finally {
       setLoading(false);
@@ -119,6 +133,7 @@ const Register = ({ onSwitch }) => {
 
   return (
     <>
+      {/* WhatsApp QR Section */}
       <div className="whatsapp-section">
         <div className="qr-container">
           <div className="qr-code">
@@ -138,36 +153,29 @@ const Register = ({ onSwitch }) => {
             </div>
           </div>
           <div className="qr-instructions">
-            <h3>
-              <i className="fab fa-whatsapp"></i> {t("registerWithWhatsapp")}
-            </h3>
+            <h3><i className="fab fa-whatsapp"></i> {t("registerWithWhatsapp")}</h3>
             <ol>
               <li>{t("waStep1")}</li>
               <li>{t("waStep2")}</li>
               <li>{t("waStep3")}</li>
             </ol>
             <div className="whatsapp-benefits">
-              <div className="benefit">
-                <i className="fas fa-bolt"></i> <span>{t("waInstant")}</span>
-              </div>
-              <div className="benefit">
-                <i className="fas fa-bell"></i> <span>{t("waNotif")}</span>
-              </div>
-              <div className="benefit">
-                <i className="fas fa-users"></i> <span>{t("waCommunity")}</span>
-              </div>
+              <div className="benefit"><i className="fas fa-bolt"></i> <span>{t("waInstant")}</span></div>
+              <div className="benefit"><i className="fas fa-bell"></i> <span>{t("waNotif")}</span></div>
+              <div className="benefit"><i className="fas fa-users"></i> <span>{t("waCommunity")}</span></div>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="divider">
-        <span>{t("or")}</span>
-      </div>
+      {/* Divider */}
+      <div className="divider"><span>{t("or")}</span></div>
 
-      <form className="auth-form" onSubmit={handleSubmit}>
+      {/* Email/Phone Registration Form */}
+      <form className="auth-form" onSubmit={otpSent ? handleOTPVerification : handleSubmit}>
         <h3>{t("registerWithEmail")}</h3>
 
+        {/* Name */}
         <div className="form-row">
           <div className="form-group">
             <input
@@ -193,6 +201,7 @@ const Register = ({ onSwitch }) => {
           </div>
         </div>
 
+        {/* Email */}
         <div className="form-group">
           <input
             type="email"
@@ -206,6 +215,7 @@ const Register = ({ onSwitch }) => {
           <i className="fas fa-envelope"></i>
         </div>
 
+        {/* Phone */}
         <div className="form-group">
           <input
             type="tel"
@@ -219,6 +229,7 @@ const Register = ({ onSwitch }) => {
           <i className="fas fa-phone"></i>
         </div>
 
+        {/* Password */}
         <div className="form-group">
           <input
             type={showPwd ? "text" : "password"}
@@ -230,16 +241,12 @@ const Register = ({ onSwitch }) => {
             className={form.password && !isPasswordStrong(form.password) ? "invalid" : ""}
           />
           <i className="fas fa-lock"></i>
-          <button
-            type="button"
-            className="password-toggle"
-            onClick={() => togglePassword("password")}
-            aria-label={showPwd ? t("hidePassword") : t("showPassword")}
-          >
+          <button type="button" className="password-toggle" onClick={() => togglePassword("password")}>
             <i className={`fas ${showPwd ? "fa-eye-slash" : "fa-eye"}`}></i>
           </button>
         </div>
 
+        {/* Confirm Password */}
         <div className="form-group">
           <input
             type={showConfirmPwd ? "text" : "password"}
@@ -248,21 +255,30 @@ const Register = ({ onSwitch }) => {
             value={form.confirmPassword}
             onChange={handleChange}
             required
-            className={
-              form.confirmPassword && !isPasswordMatch ? "invalid" : ""
-            }
+            className={!isPasswordMatch ? "invalid" : ""}
           />
           <i className="fas fa-lock"></i>
-          <button
-            type="button"
-            className="password-toggle"
-            onClick={() => togglePassword("confirm")}
-            aria-label={showConfirmPwd ? t("hidePassword") : t("showPassword")}
-          >
+          <button type="button" className="password-toggle" onClick={() => togglePassword("confirm")}>
             <i className={`fas ${showConfirmPwd ? "fa-eye-slash" : "fa-eye"}`}></i>
           </button>
         </div>
 
+        {/* OTP Input */}
+        {otpSent && (
+          <div className="form-group">
+            <input
+              type="text"
+              name="otp"
+              placeholder="Enter OTP"
+              value={otp}
+              onChange={(e) => setOtp(e.target.value)}
+              required
+            />
+            <i className="fas fa-key"></i>
+          </div>
+        )}
+
+        {/* Terms & Newsletter */}
         <div className="checkbox-group">
           <label className="checkbox-label">
             <input
@@ -273,10 +289,8 @@ const Register = ({ onSwitch }) => {
               required
             />
             <span className="checkmark"></span>
-            {t("agreeMsg1")}{" "}
-            <Link href="/legal/terms-of-service" className="link">{t("termsLink")}</Link>{" "}
-            {t("agreeMsg2")}{" "}
-            <Link href="/legal/privacy-policy" className="link">{t("privacyLink")}</Link>
+            {t("agreeMsg1")} <Link href="/legal/terms-of-service" className="link">{t("termsLink")}</Link>{" "}
+            {t("agreeMsg2")} <Link href="/legal/privacy-policy" className="link">{t("privacyLink")}</Link>
           </label>
         </div>
 
@@ -293,18 +307,15 @@ const Register = ({ onSwitch }) => {
           </label>
         </div>
 
-        <button
-          type="submit"
-          className="btn btn-primary btn-full"
-          disabled={loading}
-        >
+        {/* Submit Button */}
+        <button type="submit" className="btn btn-primary btn-full" disabled={loading}>
           {loading ? (
             <>
-              <i className="fas fa-spinner fa-spin"></i> {t("creatingAccount")}
+              <i className="fas fa-spinner fa-spin"></i> {otpSent ? "Verifying..." : "Sending OTP..."}
             </>
           ) : (
             <>
-              <i className="fas fa-user-plus"></i> {t("createAccount")}
+              <i className="fas fa-user-plus"></i> {otpSent ? "Verify OTP & Register" : t("createAccount")}
             </>
           )}
         </button>
@@ -313,11 +324,7 @@ const Register = ({ onSwitch }) => {
       <div className="auth-switch">
         <p>
           {t("alreadyHaveAccount")}{" "}
-          <button
-            className="link-btn"
-            type="button"
-            onClick={() => router.push("/login")}
-          >
+          <button className="link-btn" type="button" onClick={() => router.push("/login")}>
             {t("signIn")}
           </button>
         </p>

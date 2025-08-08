@@ -418,6 +418,7 @@
   },
   "login": {
     "signInTitle": "Sign in to Your Account",
+    "signInWithOTP": "Sign in with OTP",
     "emailPlaceholder": "Email Address",
     "passwordPlaceholder": "Password",
     "rememberMe": "Remember me",

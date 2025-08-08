@@ -118,9 +118,9 @@ const Login = ({ onSwitch, onLogin }) => {
           <span className="checkmark"></span>
           {t("rememberMe")}
         </label>
-        <a href="#" className="link" tabIndex={-1}>
+        {/* <a href="#" className="link" tabIndex={-1}>
           {t("forgotPassword")}
-        </a>
+        </a> */}
       </div>
       <button
         type="submit"
@@ -140,15 +140,16 @@ const Login = ({ onSwitch, onLogin }) => {
       <div className="divider" style={{ margin: "2rem 0" }}>
         <span>{t("or")}</span>
       </div>
-      <button
-        type="button"
-        className="btn social-btn google-btn btn-full"
-        onClick={() =>
-          showNotification(t("googleLoginMsg"), "info")
-        }
-      >
-        <i className="fab fa-google"></i> {t("signInWithGoogle")}
-      </button>
+      <div style={{ textAlign: "center", margin: "1rem 0" }}>
+        <button
+          type="button"
+          className="btn btn-secondary btn-full"
+          onClick={() => router.push("/otp-login")}
+        >
+          <i className="fas fa-mobile-alt"></i> {t("signInWithOTP")}
+        </button>
+      </div>
+
       <div className="auth-switch">
         <p>
           {t("newToGreenEye")}{" "}
