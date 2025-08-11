@@ -56,7 +56,7 @@ const Footer = () => {
             <h4>{t('contactInfo')}</h4>
             <div className="footer-contact">
               <p><i className="fas fa-map-marker-alt"></i> {t('address')}</p>
-              <p><i className="fas fa-phone"></i> 7023277322</p>
+              <p><i className="fas fa-phone"></i> <a href="tel:+919226492263">+91 92264 92263</a></p>
               <p><i className="fas fa-envelope"></i> contact@greeneye.foundation</p>
             </div>
           </div>

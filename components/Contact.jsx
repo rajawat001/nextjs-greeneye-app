@@ -62,7 +62,7 @@ const Contact = () => {
               <div className="contact-icon"><i className="fas fa-phone"></i></div>
               <div className="contact-details">
                 <h4>{t("phoneTitle")}</h4>
-                <p>7023277322</p>
+                <p><a href="tel:+919226492263">+91 92264 92263</a></p>
               </div>
             </div>
             <div className="contact-item">
