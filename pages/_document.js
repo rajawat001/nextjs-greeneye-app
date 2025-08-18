@@ -20,6 +20,8 @@ export default function Document({ __NEXT_DATA__ }) {
 
         {/* Theme */}
         <meta name="theme-color" content="#000000" />
+        {/* Facebook Domain Verification */}
+        <meta name="facebook-domain-verification" content="iy6g39r9edjzoymmqatbhwym5o10js" />
       </Head>
       <body>
         <Main />
