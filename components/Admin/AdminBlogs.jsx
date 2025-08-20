@@ -33,6 +33,7 @@ export default function AdminBlogs() {
     fetchBlogs();
   }, []);
 
+  // Fetch blogs from backend
   const fetchBlogs = async () => {
     setLoading(true);
     const res = await axios.get(
@@ -42,8 +43,10 @@ export default function AdminBlogs() {
     setLoading(false);
   };
 
+  // Open modal for Add/Edit blog
   const openBlogModal = (blog) => {
     if (blog) {
+      // Editing existing blog
       setEditBlogId(blog._id);
       setForm({
         slug: blog.slug,
@@ -55,8 +58,9 @@ export default function AdminBlogs() {
           ...blog.translations,
         },
       });
-      setOldImage(blog.image || null); // 🔑 store old image
+      setOldImage(blog.image || null); // store old image for deletion
     } else {
+      // Creating new blog
       setEditBlogId(null);
       setForm(initialForm);
       setOldImage(null);
@@ -65,6 +69,7 @@ export default function AdminBlogs() {
     setModalOpen(true);
   };
 
+  // Handle form input changes
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     if (["title", "content"].includes(name)) {
@@ -86,14 +91,16 @@ export default function AdminBlogs() {
     }
   };
 
+  // Handle image selection (for preview only)
   const handleImageSelect = (e) => {
     const file = e.target.files[0];
     if (file) {
       setSelectedFile(file);
-      setForm((prev) => ({ ...prev, image: URL.createObjectURL(file) }));
+      setForm((prev) => ({ ...prev, image: URL.createObjectURL(file) })); // preview
     }
   };
 
+  // Save blog (create/update)
   const handleSave = async () => {
     setSaving(true);
     const token = localStorage.getItem("authToken");
@@ -101,15 +108,16 @@ export default function AdminBlogs() {
     let imageUrl = form.image;
 
     try {
+      // If a new image is selected
       if (selectedFile) {
-        // 1. delete old image
-        if (oldImage && !oldImage.startsWith("blob:")) {
+        // Delete old image from Cloudinary if it exists
+        if (oldImage && oldImage.startsWith("http")) {
           await fetch(`/api/upload?imagePath=${encodeURIComponent(oldImage)}`, {
             method: "DELETE",
           });
         }
 
-        // 2. Upload New Image
+        // Upload new image to Cloudinary
         const formData = new FormData();
         formData.append("file", selectedFile);
         const uploadRes = await fetch("/api/upload", {
@@ -117,11 +125,12 @@ export default function AdminBlogs() {
           body: formData,
         });
         const uploadData = await uploadRes.json();
-        imageUrl = uploadData.imageUrl;
+        imageUrl = uploadData.imageUrl; // Cloudinary secure_url
       }
 
       const payload = { ...form, image: imageUrl };
 
+      // If editing, update existing blog
       if (editBlogId) {
         await axios.put(
           `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/blogs/${editBlogId}`,
@@ -129,6 +138,7 @@ export default function AdminBlogs() {
           { headers: { Authorization: `Bearer ${token}` } }
         );
       } else {
+        // If creating, create new blog
         await axios.post(
           `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/blogs`,
           payload,
@@ -136,6 +146,7 @@ export default function AdminBlogs() {
         );
       }
 
+      // Reset form and refresh blogs
       setModalOpen(false);
       setForm(initialForm);
       setEditBlogId(null);
@@ -143,29 +154,32 @@ export default function AdminBlogs() {
       setOldImage(null);
       fetchBlogs();
     } catch (e) {
+      console.error(e);
       alert("Failed to save blog");
     }
     setSaving(false);
   };
 
+  // Delete blog and its image
   const handleDelete = async () => {
     if (!window.confirm("Delete this blog?")) return;
     const token = localStorage.getItem("authToken");
 
     try {
-      // 1. blog delete
+      // Delete blog entry from backend
       await axios.delete(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/blogs/${editBlogId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      // 2.  blog image delete
-      if (oldImage && !oldImage.startsWith("blob:")) {
+      // Delete image from Cloudinary if exists
+      if (oldImage && oldImage.startsWith("http")) {
         await fetch(`/api/upload?imagePath=${encodeURIComponent(oldImage)}`, {
           method: "DELETE",
         });
       }
 
+      // Reset form and refresh
       setModalOpen(false);
       setForm(initialForm);
       setEditBlogId(null);
@@ -173,6 +187,7 @@ export default function AdminBlogs() {
       setOldImage(null);
       fetchBlogs();
     } catch (e) {
+      console.error(e);
       alert("Failed to delete blog");
     }
   };
@@ -188,6 +203,7 @@ export default function AdminBlogs() {
         Add Blog
       </button>
 
+      {/* Blog Modal */}
       {modalOpen && (
         <div className="admin-modal-overlay">
           <div className="admin-modal">
@@ -205,6 +221,7 @@ export default function AdminBlogs() {
             <label>Upload Image</label>
             <input type="file" accept="image/*" onChange={handleImageSelect} />
 
+            {/* Image Preview */}
             {form.image && (
               <div style={{ marginTop: 8 }}>
                 <strong>Preview:</strong>
@@ -271,6 +288,7 @@ export default function AdminBlogs() {
         </div>
       )}
 
+      {/* Blog List */}
       {loading ? (
         <div>Loading...</div>
       ) : (

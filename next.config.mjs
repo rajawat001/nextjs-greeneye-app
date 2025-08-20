@@ -6,7 +6,14 @@ const nextConfig = {
     localeDetection: false,
   },
   images: {
-    domains: ['scontent.fjai6-1.fna.fbcdn.net']
+    domains: ['scontent.fjai6-1.fna.fbcdn.net'],
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "res.cloudinary.com",
+        pathname: "/**",
+      },
+    ],
   }
 };
 
