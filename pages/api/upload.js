@@ -4,28 +4,20 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 
-// Create uploads folder if it doesn't exist
 const uploadDir = path.join(process.cwd(), '/public/uploads');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-// Configure Multer
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + file.originalname;
-    cb(null, uniqueSuffix);
-  },
+  destination: (req, file, cb) => cb(null, uploadDir),
+  filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname),
 });
 
-const upload = multer({ storage: storage });
+const upload = multer({ storage });
 
 const apiRoute = createRouter({
   onError(error, req, res) {
-    console.error("Upload error:", error);
     res.status(500).json({ error: `Something went wrong: ${error.message}` });
   },
   onNoMatch(req, res) {
@@ -33,6 +25,7 @@ const apiRoute = createRouter({
   },
 });
 
+// ----------- Upload -----------
 apiRoute.use(upload.single('file'));
 
 apiRoute.post((req, res) => {
@@ -40,10 +33,22 @@ apiRoute.post((req, res) => {
   res.status(200).json({ imageUrl: filePath });
 });
 
+// ----------- Delete -----------
+apiRoute.delete((req, res) => {
+  const { imagePath } = req.query; //  `/uploads/...` from frontend 
+  if (!imagePath) return res.status(400).json({ error: 'No image path provided' });
+
+  const fullPath = path.join(process.cwd(), '/public', imagePath);
+
+  if (fs.existsSync(fullPath)) {
+    fs.unlinkSync(fullPath);
+    return res.status(200).json({ success: true, message: 'Image deleted' });
+  }
+  return res.status(404).json({ error: 'File not found' });
+});
+
 export const config = {
-  api: {
-    bodyParser: false,
-  },
+  api: { bodyParser: false },
 };
 
 export default apiRoute.handler();

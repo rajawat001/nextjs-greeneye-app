@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
-const LANGUAGES = ["en", "fr", "hi"]; // supported language codes
+const LANGUAGES = ["en", "fr", "ar", "es", "ja", "zh"]; // supported language codes
 
 const initialForm = {
   slug: "",
@@ -11,8 +11,11 @@ const initialForm = {
   translations: {
     en: { title: "", content: "" },
     fr: { title: "", content: "" },
-    hi: { title: "", content: "" },
-  }
+    ar: { title: "", content: "" },
+    es: { title: "", content: "" },
+    ja: { title: "", content: "" },
+    zh: { title: "", content: "" },
+  },
 };
 
 export default function AdminBlogs() {
@@ -23,38 +26,18 @@ export default function AdminBlogs() {
   const [selectedLang, setSelectedLang] = useState("en");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [oldImage, setOldImage] = useState(null);
 
   useEffect(() => {
     fetchBlogs();
   }, []);
 
-  const handleImageUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const formData = new FormData();
-    formData.append("file", file);
-
-    try {
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = await res.json();
-      if (data.imageUrl) {
-        setForm((prev) => ({ ...prev, image: data.imageUrl }));
-      }
-    } catch (err) {
-      console.error("Image upload failed:", err);
-      alert("Image upload failed");
-    }
-  };
-
-
   const fetchBlogs = async () => {
     setLoading(true);
-    const res = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/blogs`);
+    const res = await axios.get(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/blogs`
+    );
     setBlogs(res.data.blogs);
     setLoading(false);
   };
@@ -69,13 +52,16 @@ export default function AdminBlogs() {
         author: blog.author,
         translations: {
           ...initialForm.translations,
-          ...blog.translations
-        }
+          ...blog.translations,
+        },
       });
+      setOldImage(blog.image || null); // 🔑 store old image
     } else {
       setEditBlogId(null);
       setForm(initialForm);
+      setOldImage(null);
     }
+    setSelectedFile(null);
     setModalOpen(true);
   };
 
@@ -88,9 +74,9 @@ export default function AdminBlogs() {
           ...prev.translations,
           [selectedLang]: {
             ...prev.translations[selectedLang],
-            [name]: value
-          }
-        }
+            [name]: value,
+          },
+        },
       }));
     } else {
       setForm((prev) => ({
@@ -100,11 +86,42 @@ export default function AdminBlogs() {
     }
   };
 
+  const handleImageSelect = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setSelectedFile(file);
+      setForm((prev) => ({ ...prev, image: URL.createObjectURL(file) }));
+    }
+  };
+
   const handleSave = async () => {
     setSaving(true);
     const token = localStorage.getItem("authToken");
+
+    let imageUrl = form.image;
+
     try {
-      const payload = { ...form };
+      if (selectedFile) {
+        // 1. delete old image
+        if (oldImage && !oldImage.startsWith("blob:")) {
+          await fetch(`/api/upload?imagePath=${encodeURIComponent(oldImage)}`, {
+            method: "DELETE",
+          });
+        }
+
+        // 2. Upload New Image
+        const formData = new FormData();
+        formData.append("file", selectedFile);
+        const uploadRes = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
+        const uploadData = await uploadRes.json();
+        imageUrl = uploadData.imageUrl;
+      }
+
+      const payload = { ...form, image: imageUrl };
+
       if (editBlogId) {
         await axios.put(
           `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/blogs/${editBlogId}`,
@@ -118,9 +135,12 @@ export default function AdminBlogs() {
           { headers: { Authorization: `Bearer ${token}` } }
         );
       }
+
       setModalOpen(false);
       setForm(initialForm);
       setEditBlogId(null);
+      setSelectedFile(null);
+      setOldImage(null);
       fetchBlogs();
     } catch (e) {
       alert("Failed to save blog");
@@ -131,14 +151,30 @@ export default function AdminBlogs() {
   const handleDelete = async () => {
     if (!window.confirm("Delete this blog?")) return;
     const token = localStorage.getItem("authToken");
-    await axios.delete(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/blogs/${editBlogId}`,
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    setModalOpen(false);
-    setForm(initialForm);
-    setEditBlogId(null);
-    fetchBlogs();
+
+    try {
+      // 1. blog delete
+      await axios.delete(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/blogs/${editBlogId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      // 2.  blog image delete
+      if (oldImage && !oldImage.startsWith("blob:")) {
+        await fetch(`/api/upload?imagePath=${encodeURIComponent(oldImage)}`, {
+          method: "DELETE",
+        });
+      }
+
+      setModalOpen(false);
+      setForm(initialForm);
+      setEditBlogId(null);
+      setSelectedFile(null);
+      setOldImage(null);
+      fetchBlogs();
+    } catch (e) {
+      alert("Failed to delete blog");
+    }
   };
 
   return (
@@ -155,20 +191,29 @@ export default function AdminBlogs() {
       {modalOpen && (
         <div className="admin-modal-overlay">
           <div className="admin-modal">
-            <button onClick={() => setModalOpen(false)} className="modal-close">×</button>
+            <button
+              onClick={() => setModalOpen(false)}
+              className="modal-close"
+            >
+              ×
+            </button>
             <h4>{editBlogId ? "Edit Blog" : "Add Blog"}</h4>
 
             <label>Slug</label>
             <input name="slug" value={form.slug} onChange={handleChange} />
 
             <label>Upload Image</label>
-            <input type="file" accept="image/*" onChange={handleImageUpload} />
+            <input type="file" accept="image/*" onChange={handleImageSelect} />
 
             {form.image && (
               <div style={{ marginTop: 8 }}>
                 <strong>Preview:</strong>
                 <br />
-                <img src={form.image} alt="Uploaded preview" style={{ maxWidth: "200px", marginTop: 5 }} />
+                <img
+                  src={form.image}
+                  alt="Preview"
+                  style={{ maxWidth: "200px", marginTop: 5 }}
+                />
               </div>
             )}
 
@@ -185,15 +230,18 @@ export default function AdminBlogs() {
             <label>Author</label>
             <input name="author" value={form.author} onChange={handleChange} />
 
-            {/* Language Selector */}
             <label>Language</label>
-            <select value={selectedLang} onChange={(e) => setSelectedLang(e.target.value)}>
+            <select
+              value={selectedLang}
+              onChange={(e) => setSelectedLang(e.target.value)}
+            >
               {LANGUAGES.map((lang) => (
-                <option key={lang} value={lang}>{lang.toUpperCase()}</option>
+                <option key={lang} value={lang}>
+                  {lang.toUpperCase()}
+                </option>
               ))}
             </select>
 
-            {/* Title & Content based on selected language */}
             <label>Title ({selectedLang})</label>
             <input
               name="title"
@@ -214,7 +262,9 @@ export default function AdminBlogs() {
                 {saving ? "Saving..." : editBlogId ? "Update" : "Create"}
               </button>
               {editBlogId && (
-                <button onClick={handleDelete} className="delete-btn">Delete</button>
+                <button onClick={handleDelete} className="delete-btn">
+                  Delete
+                </button>
               )}
             </div>
           </div>
@@ -235,7 +285,11 @@ export default function AdminBlogs() {
           </thead>
           <tbody>
             {blogs.map((b) => (
-              <tr key={b._id} onClick={() => openBlogModal(b)} style={{ cursor: "pointer" }}>
+              <tr
+                key={b._id}
+                onClick={() => openBlogModal(b)}
+                style={{ cursor: "pointer" }}
+              >
                 <td>{b.slug}</td>
                 <td>{b.published ? "Yes" : "No"}</td>
                 <td>{new Date(b.createdAt).toLocaleDateString()}</td>
