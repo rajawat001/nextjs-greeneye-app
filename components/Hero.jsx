@@ -2,6 +2,7 @@
 import React from "react";
 import { useRouter } from "next/router";
 import { useTranslations } from "next-intl";
+import { motion } from "framer-motion";
 
 const Hero = () => {
   const router = useRouter(); // Next.js routing hook
@@ -59,11 +60,23 @@ const Hero = () => {
         role="button"
         aria-label={t("plantBtnAria")}
       >
-        <img
+        {/* Plant Image Animated */}
+        <motion.img
           src="/assets/plant.png"
           alt={t("plantImgAlt")}
           className="plant-image"
+          animate={{ scale: [1, 1.05, 1], rotate: [0, -3, 3, 0] }}
+          transition={{ repeat: Infinity, duration: 1.2, ease: "easeInOut" }}
         />
+
+        {/* Arrow Animation */}
+        <motion.div
+          className="click-arrow"
+          animate={{ x: [0, -15, 0], y: [0, -5, 0] }}
+          transition={{ repeat: Infinity, duration: 1.2, ease: "easeInOut" }}
+        >
+          👉
+        </motion.div>
       </div>
     </section>
   );
